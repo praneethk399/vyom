@@ -35,10 +35,57 @@ Login: any callsign (≥3 chars) with access key **`GAS418S-ALPHA-Q`**.
 - Alert ladder: caution → gauge highlight + toast; warning → panel pulse + toast + `vibrate(200)`; critical → vignette flash + banner + anime.js screen shake + `vibrate([100,50,100,50,200])`. `prefers-reduced-motion` and the Alert Intensity setting (Full / Reduced / Silent) gate motion/haptics; color + toast always remain.
 - Mode/fault/replay state is global (zustand) — injecting a fault or scrubbing a replay ripples into all pages.
 
-## Checks
+## Backend API
+
+Single Express server (`server/`, port 3001, proxied from Vite as `/api`).
+
+| Endpoint | Purpose |
+|---|---|
+| `GET /api/health` | liveness |
+| `GET /api/telemetry` | current simulated engine state (`engineId, rpm, tet, thrust, oilPressure, vibration, fuelFlow, battery, health, predictedRUL, missionStatus, timestamp`) |
+| `POST /api/simulation/scenario` | apply a scenario: `nominal \| tet_runaway \| vibration_growth \| oil_pressure_loss \| compressor_surge \| fuel_flow_anomaly \| battery_sag`. Runs the centralized alert engine → history → SMS; returns telemetry + alert |
+| `POST /api/alerts` | ingest a standardized alert `{ alertType, severity, engineId, parameter, value, threshold, timestamp, scenario }`; validate → store → SMS (WARNING/CRITICAL only, 5-min duplicate window) |
+| `GET /api/alerts` | recent alert history for the dashboard |
+| `POST /api/test/critical-alert` | **dev/test only** — forces a `VIBRATION_LIMIT_BREACH` CRITICAL alert through the full pipeline |
+| `GET /api/datasets` · `GET /api/datasets/:id` | replay dataset library |
+| `POST /api/diagnose` | telemetry window → `AIDiagnosticReport` (Gemini or rule-based) |
+
+### Scenario Sim workflow
+
+Scenario Sim button → `POST /api/simulation/scenario` → backend applies the scenario to its simulated engine → centralized alert engine evaluates it (severity/alertType per scenario) → alert recorded → **WARNING/CRITICAL** sent to Fast2SMS (duplicates for the same engine + alert type suppressed for 5 minutes) → response carries the telemetry snapshot + alert, which the frontend adopts into the existing stores (viewer, gauge strip, health/RUL, mission status, alert feed + SMS status). Scenario classification lives in the backend — the React side only renders its result. The client-side 10 Hz LIVE_SIM generator and its deterministic threshold layer are unchanged and keep running alongside.
+
+### Alert SMS (Fast2SMS)
+
+Add to `.env` (server-only — never exposed to the frontend):
+
+```
+FAST2SMS_API_KEY=xxxx        # from console.fast2sms.com
+ALERT_PHONE_NUMBER=+919999999999
+```
+
+- Only `WARNING` and `CRITICAL` alerts are ever SMS'd; `NORMAL` is never sent.
+- Messages are fault-specific (`TET_RUNAWAY`, `VIBRATION_LIMIT_BREACH` with live value/threshold, `OIL_PRESSURE_LOSS`, `COMPRESSOR_SURGE`, `FUEL_FLOW_ANOMALY`, `BATTERY_SAG`).
+- **No API key → dev-test mode:** the exact message is logged server-side and the pipeline reports success, so the whole chain can be exercised without a provider.
+- Failures (missing key, invalid phone, provider error) never crash the backend — the alert is stored with `sms: "failed"`. Alert/SMS endpoints carry a basic per-IP rate limit (429 on excess).
+
+### Environment variables
+
+| Var | Used by | Notes |
+|---|---|---|
+| `PORT` | server | default 3001 |
+| `GEMINI_API_KEY` | `/api/diagnose` | optional — rule-based fallback without it |
+| `FAST2SMS_API_KEY` | alert SMS | optional — dev-test mode without it |
+| `ALERT_PHONE_NUMBER` | alert SMS | E.164 recipient |
+| `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY` | Access page auth | empty = demo login (callsign + `GAS418S-ALPHA-Q`) |
+
+### Testing
 
 ```bash
 npm run typecheck   # tsc -b (app + server)
-npm test            # vitest — thresholds, ring buffer, fault golden tests
+npm test            # vitest — thresholds, ring buffer, fault golden, alert/SMS pipeline
 npm run build       # production build
+
+# exercise the pipeline against a running dev server:
+curl -X POST localhost:3001/api/simulation/scenario -H 'Content-Type: application/json' -d '{"scenario":"vibration_growth"}'
+curl -X POST localhost:3001/api/test/critical-alert -H 'Content-Type: application/json' -d '{}'
 ```

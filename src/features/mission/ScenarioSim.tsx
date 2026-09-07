@@ -2,7 +2,7 @@ import { FAULT_CLASSES, FAULT_PROFILES } from '../telemetry/liveSim';
 import { useTelemetryStore } from '../../state/telemetryStore';
 import { useAlertStore } from '../../state/alertStore';
 import { systemEvent } from '../telemetry/useTelemetryEngine';
-import { addAlert, buildScenarioAlert, sendAlertSMS } from '../alerts/scenarioAlerts';
+import { runScenario } from '../alerts/scenarioAlerts';
 import type { FaultClass, Severity } from '../../lib/types';
 
 const FAULT_SEVERITY: Record<FaultClass, Severity> = {
@@ -20,23 +20,23 @@ export function ScenarioSim() {
   const setFault = useTelemetryStore((s) => s.setFault);
 
   const inject = (f: FaultClass) => {
+    // Keep the local generator fault in sync so the client-side engine ramps
+    // too — the backend snapshot adoption covers the instant, the generator
+    // carries continuous motion around it.
     setFault(f);
-
-    // Standardized alert through the whole pipeline: feed entry + visual
-    // delivery, then SMS for WARNING/CRITICAL (deduped server + client).
-    const alert = buildScenarioAlert(f);
-    addAlert(alert);
-    void sendAlertSMS(alert);
 
     if (f === 'NORMAL') {
       // Clear active fault conditions — dim outstanding alerts, drop residual
-      // limit state so gauges/badges return to nominal. No SMS is sent.
+      // limit state so gauges/badges return to nominal.
       useAlertStore.getState().acknowledgeAll();
       useTelemetryStore.setState({ limitState: {} });
       systemEvent('FAULT', 'FAULT CLEARED — ALL SYSTEMS NOMINAL', 'nominal');
     } else {
       systemEvent('FAULT', `FAULT INJECTED — ${FAULT_PROFILES[f].label}`, FAULT_SEVERITY[f]);
     }
+
+    // Scenario Sim → backend simulation → alert engine → SMS → feed.
+    void runScenario(f);
   };
 
   return (
