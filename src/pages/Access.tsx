@@ -1,6 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
+import { TextEffect } from '../components/motion-primitives/text-effect';
+import { TextShimmer } from '../components/motion-primitives/text-shimmer';
+import { BorderTrail } from '../components/motion-primitives/border-trail';
 import { useTelemetryStore } from '../state/telemetryStore';
 import { fmt2, fmtClock } from '../lib/format';
 import { getSession, setSession } from '../lib/session';
@@ -97,7 +100,17 @@ export function Access() {
           </div>
           {BOOT_LINES.slice(0, revealed).map((l) => (
             <p key={l} className="text-[11px] leading-6 text-muted">
-              <span className="text-accent">▸</span> {l}
+              <span className="text-accent">▸</span>{' '}
+              <TextEffect
+                as="span"
+                per="word"
+                preset="fade-in-blur"
+                speedReveal={3}
+                speedSegment={2.5}
+                className="inline"
+              >
+                {l}
+              </TextEffect>
             </p>
           ))}
           {booting && <p className="text-[11px] leading-6 text-accent"><span className="blink">▌</span></p>}
@@ -112,8 +125,14 @@ export function Access() {
           style={{ background: 'var(--line)' }}
         >
           <div className="bevel-in bg-[color:var(--panel)] p-6">
-            <h1 className="text-4xl font-bold tracking-[0.3em] text-accent" style={{ fontFamily: 'var(--font-display)' }}>
-              VYOM
+            <h1 style={{ fontFamily: 'var(--font-display)' }}>
+              <TextShimmer
+                as="span"
+                duration={3.5}
+                className="text-4xl font-bold tracking-[0.3em] [--base-color:#30e07e] [--base-gradient-color:#d6ffe8]"
+              >
+                VYOM
+              </TextShimmer>
             </h1>
             <p className="mt-1 text-[10px] font-semibold uppercase tracking-[0.24em] text-muted">
               AI-Enabled Digital Twin · Flygas GAS418S · Archer-BH
@@ -147,13 +166,20 @@ export function Access() {
                 <p className="text-[10px] font-bold uppercase tracking-widest text-critical">ACCESS KEY REJECTED — RETRY</p>
               )}
 
-              <button
-                type="submit"
-                disabled={booting || callsign.trim().length < 3}
-                className="mt-1 border border-[var(--accent)] bg-accent-soft px-4 py-2.5 text-[11px] font-bold uppercase tracking-[0.24em] text-accent transition-opacity hover:opacity-85 disabled:cursor-not-allowed disabled:opacity-35"
-              >
-                Authenticate.
-              </button>
+              <div className="relative mt-1">
+                <BorderTrail
+                  style={{ background: 'var(--accent)' }}
+                  size={42}
+                  transition={{ repeat: Infinity, duration: 3.2, ease: 'linear' }}
+                />
+                <button
+                  type="submit"
+                  disabled={booting || callsign.trim().length < 3}
+                  className="w-full border border-[var(--accent)] bg-accent-soft px-4 py-2.5 text-[11px] font-bold uppercase tracking-[0.24em] text-accent transition-opacity hover:opacity-85 disabled:cursor-not-allowed disabled:opacity-35"
+                >
+                  Authenticate.
+                </button>
+              </div>
             </form>
 
             <p className="mt-4 text-[9px] uppercase tracking-widest text-muted">

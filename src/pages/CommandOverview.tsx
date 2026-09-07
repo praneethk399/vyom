@@ -11,6 +11,7 @@ import { useThrottledRing } from '../features/telemetry/useThrottledRing';
 import { TrendChart } from '../components/TrendChart';
 import { StatusBadge } from '../components/StatusBadge';
 import { CountUp } from '../components/CountUp';
+import { BorderTrail } from '../components/motion-primitives/border-trail';
 import { AlertFeed } from '../features/alerts/AlertFeed';
 import { FailureModeCard } from '../features/failure-modes/FailureModeCard';
 import { ScenarioSim } from '../features/mission/ScenarioSim';
@@ -206,6 +207,11 @@ export function CommandOverview() {
             >
               <div className="relative h-full min-h-[280px]">
                 <EngineView />
+                <BorderTrail
+                  style={{ background: 'var(--accent)' }}
+                  size={54}
+                  transition={{ repeat: Infinity, duration: 7, ease: 'linear' }}
+                />
               </div>
             </Panel>
           </Reveal>
