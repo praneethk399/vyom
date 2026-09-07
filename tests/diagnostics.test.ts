@@ -70,6 +70,7 @@ describe('diagnostics loop — slow-response race', () => {
 
   it('a pending slow response blocks new fetches, so the report is always the latest one', async () => {
     stop = startDiagnosticsLoop(); // initial tick -> request 0 issued, still pending
+    await flush(); // let the authHeaders() microtask settle, then fetch fires
     expect(fetchMock).toHaveBeenCalledTimes(1);
     expect(useDiagnosticsStore.getState().running).toBe(true);
 
@@ -96,6 +97,7 @@ describe('diagnostics loop — slow-response race', () => {
 
   it('a failed response records the error without wedging the loop', async () => {
     stop = startDiagnosticsLoop();
+    await flush();
     calls[0].resolve({ ok: false, status: 503 } as Response);
     await flush();
     const s = useDiagnosticsStore.getState();

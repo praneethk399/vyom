@@ -1,13 +1,14 @@
 import type { FlightDataset, FlightDatasetMeta } from '../../lib/types';
+import { authHeaders } from '../../lib/supabase';
 
 export async function fetchDatasetList(): Promise<FlightDatasetMeta[]> {
-  const res = await fetch('/api/datasets');
+  const res = await fetch('/api/datasets', { headers: await authHeaders() });
   if (!res.ok) throw new Error(`datasets ${res.status}`);
   return (await res.json()) as FlightDatasetMeta[];
 }
 
 export async function fetchDataset(id: string): Promise<FlightDataset> {
-  const res = await fetch(`/api/datasets/${encodeURIComponent(id)}`);
+  const res = await fetch(`/api/datasets/${encodeURIComponent(id)}`, { headers: await authHeaders() });
   if (!res.ok) throw new Error(`dataset ${res.status}`);
   return (await res.json()) as FlightDataset;
 }

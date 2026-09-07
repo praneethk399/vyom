@@ -5,6 +5,7 @@ import { useDiagnosticsStore } from '../../state/diagnosticsStore';
 import { sampleWindow } from '../telemetry/ringBuffer';
 import { detectPrecursors } from '../../lib/thresholds';
 import { predict, isFailurePredicted, slopeFeatures, modelMeta } from '../../lib/aiInference';
+import { authHeaders } from '../../lib/supabase';
 import type { AIDiagnosticReport, DiagnoseResponse, Subsystem } from '../../lib/types';
 
 export const DIAGNOSE_INTERVAL_MS = 3000;
@@ -128,7 +129,7 @@ export function startDiagnosticsLoop(): () => void {
     try {
       const res = await fetch('/api/diagnose', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...(await authHeaders()) },
         body: JSON.stringify({
           window: sampleWindow(s.ring, 90).map((f) => ({ ts: f.ts, telemetry: f.telemetry })),
           fault: s.fault,

@@ -6,6 +6,7 @@ import alertsRouter, { testRouter } from './routes/alerts';
 import telemetryRouter from './routes/telemetry';
 import simulationRouter from './routes/simulation';
 import { notFound, errorHandler } from './middleware/errorHandler';
+import { requireSupabaseAuth } from './middleware/auth';
 
 export function buildApp(): express.Express {
   const app = express();
@@ -16,8 +17,10 @@ export function buildApp(): express.Express {
     res.json({ ok: true, service: 'vyom', time: Date.now() });
   });
 
-  app.use('/api/datasets', datasetsRouter);
-  app.use('/api/diagnose', diagnoseRouter);
+  // Replay datasets and the AI diagnose endpoint are gated behind the Supabase
+  // session (Bearer token). Demo mode (no Supabase configured) passes through.
+  app.use('/api/datasets', requireSupabaseAuth(), datasetsRouter);
+  app.use('/api/diagnose', requireSupabaseAuth(), diagnoseRouter);
   app.use('/api/alerts', alertsRouter);
   app.use('/api/telemetry', telemetryRouter);
   app.use('/api/simulation/scenario', simulationRouter);
