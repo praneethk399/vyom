@@ -7,6 +7,7 @@ import { BorderTrail } from '../components/motion-primitives/border-trail';
 import { useTelemetryStore } from '../state/telemetryStore';
 import { fmt2, fmtClock } from '../lib/format';
 import { getSession, setSession } from '../lib/session';
+import { supabase } from '../lib/supabase';
 
 const DEMO_KEY = 'GAS418S-ALPHA-Q';
 
@@ -18,10 +19,32 @@ const BOOT_LINES = [
   'ACCESS CONTROL ............. ARMED',
 ];
 
+type AuthMode = 'signin' | 'register';
+
+function emailToCallsign(email: string): string {
+  return (email.split('@')[0] || 'OPERATOR').toUpperCase().slice(0, 12);
+}
+
+/** Map Supabase auth errors to short cockpit-style lines. */
+function supabaseMsg(message: string): string {
+  const m = message.toLowerCase();
+  if (m.includes('invalid login credentials')) return 'INVALID EMAIL OR PASSWORD';
+  if (m.includes('email not confirmed')) return 'EMAIL NOT CONFIRMED — CHECK YOUR INBOX';
+  if (m.includes('already registered')) return 'EMAIL ALREADY REGISTERED — SIGN IN INSTEAD';
+  if (m.includes('at least 6 characters')) return 'PASSWORD MUST BE AT LEAST 6 CHARACTERS';
+  return message.toUpperCase().slice(0, 72);
+}
+
 export function Access() {
   const navigate = useNavigate();
   const [callsign, setCallsign] = useState('');
   const [accessKey, setAccessKey] = useState('');
+  const [authMode, setAuthMode] = useState<AuthMode>('signin');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [authError, setAuthError] = useState<string | null>(null);
+  const [verifyNotice, setVerifyNotice] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
   const [revealed, setRevealed] = useState(0);
   const [rejected, setRejected] = useState(false);
   const [granted, setGranted] = useState(false);
@@ -48,17 +71,93 @@ export function Access() {
 
   const booting = revealed < BOOT_LINES.length;
 
-  const submit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (booting || callsign.trim().length < 3) return;
-    if (accessKey.trim().toUpperCase() !== DEMO_KEY) {
-      setRejected(true);
-      return;
-    }
-    setSession(callsign.trim());
+  const grant = (operator: string) => {
+    setSession(operator);
     setGranted(true);
     window.setTimeout(() => navigate('/command', { replace: true }), 850);
   };
+
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (booting || busy) return;
+
+    // Not configured → local demo auth (offline / hackathon fallback).
+    if (!supabase) {
+      if (callsign.trim().length < 3) return;
+      if (accessKey.trim().toUpperCase() !== DEMO_KEY) {
+        setRejected(true);
+        return;
+      }
+      grant(callsign.trim());
+      return;
+    }
+
+    if (!email.trim() || password.length < 6) {
+      setAuthError('ENTER EMAIL + PASSWORD (MIN 6 CHARACTERS)');
+      return;
+    }
+    setBusy(true);
+    setAuthError(null);
+    setVerifyNotice(null);
+    const operator = emailToCallsign(email);
+
+    if (authMode === 'signin') {
+      const { error } = await supabase.auth.signInWithPassword({
+        email: email.trim(),
+        password,
+      });
+      setBusy(false);
+      if (error) {
+        setAuthError(supabaseMsg(error.message));
+        return;
+      }
+      grant(operator);
+    } else {
+      const { data, error } = await supabase.auth.signUp({
+        email: email.trim(),
+        password,
+      });
+      setBusy(false);
+      if (error) {
+        setAuthError(supabaseMsg(error.message));
+        return;
+      }
+      if (data.session) {
+        // Email confirmation disabled in this project — straight in.
+        grant(operator);
+      } else {
+        setVerifyNotice('VERIFICATION EMAIL SENT — CONFIRM, THEN SIGN IN');
+      }
+    }
+  };
+
+  const submitLabel = !supabase
+    ? 'Authenticate.'
+    : busy
+      ? 'Please wait…'
+      : authMode === 'register'
+        ? 'Create account.'
+        : 'Sign in.';
+
+  const authChip = (mode: AuthMode, label: string) => (
+    <button
+      key={mode}
+      type="button"
+      onClick={() => {
+        setAuthMode(mode);
+        setAuthError(null);
+        setVerifyNotice(null);
+      }}
+      aria-pressed={authMode === mode}
+      className={`hud-chip border px-2.5 py-1 text-[9px] font-bold uppercase tracking-[0.14em] transition-colors ${
+        authMode === mode
+          ? 'border-[var(--accent)] bg-accent-soft text-accent'
+          : 'border-[var(--line)] text-muted hover:text-[var(--text)]'
+      }`}
+    >
+      {label}
+    </button>
+  );
 
   return (
     <div className="relative flex min-h-screen flex-col overflow-hidden" style={{ background: 'var(--bg-deep)' }}>
@@ -139,31 +238,77 @@ export function Access() {
             </p>
 
             <form onSubmit={submit} className="mt-6 flex flex-col gap-3">
-              <label className="flex flex-col gap-1">
-                <span className="eyebrow">CALLSIGN</span>
-                <input
-                  value={callsign}
-                  onChange={(e) => setCallsign(e.target.value.toUpperCase())}
-                  autoComplete="username"
-                  className="num border bg-[color:var(--bg-deep)] px-2.5 py-2 text-sm uppercase outline-none placeholder:uppercase placeholder:text-muted/60"
-                  style={{ borderColor: 'var(--line)' }}
-                  placeholder="ALPHA-Q"
-                />
-              </label>
-              <label className="flex flex-col gap-1">
-                <span className="eyebrow">ACCESS KEY</span>
-                <input
-                  type="password"
-                  value={accessKey}
-                  onChange={(e) => setAccessKey(e.target.value)}
-                  className="num border bg-[color:var(--bg-deep)] px-2.5 py-2 text-sm outline-none"
-                  style={{ borderColor: 'var(--line)' }}
-                  placeholder="••••••••••••••••"
-                />
-              </label>
+              {supabase ? (
+                <>
+                  <div className="flex items-center gap-1.5" role="group" aria-label="Auth mode">
+                    {authChip('signin', 'SIGN IN')}
+                    {authChip('register', 'REGISTER')}
+                  </div>
+                  <label className="flex flex-col gap-1">
+                    <span className="eyebrow">EMAIL</span>
+                    <input
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      autoComplete="email"
+                      className="num border bg-[color:var(--bg-deep)] px-2.5 py-2 text-sm outline-none placeholder:text-muted/60"
+                      style={{ borderColor: 'var(--line)' }}
+                      placeholder="OPERATOR@VYOM.AERO"
+                    />
+                  </label>
+                  <label className="flex flex-col gap-1">
+                    <span className="eyebrow">PASSWORD</span>
+                    <input
+                      type="password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      autoComplete={authMode === 'signin' ? 'current-password' : 'new-password'}
+                      className="num border bg-[color:var(--bg-deep)] px-2.5 py-2 text-sm outline-none"
+                      style={{ borderColor: 'var(--line)' }}
+                      placeholder="••••••••••••"
+                    />
+                  </label>
+                </>
+              ) : (
+                <>
+                  <label className="flex flex-col gap-1">
+                    <span className="eyebrow">CALLSIGN</span>
+                    <input
+                      value={callsign}
+                      onChange={(e) => setCallsign(e.target.value.toUpperCase())}
+                      autoComplete="username"
+                      className="num border bg-[color:var(--bg-deep)] px-2.5 py-2 text-sm uppercase outline-none placeholder:uppercase placeholder:text-muted/60"
+                      style={{ borderColor: 'var(--line)' }}
+                      placeholder="ALPHA-Q"
+                    />
+                  </label>
+                  <label className="flex flex-col gap-1">
+                    <span className="eyebrow">ACCESS KEY</span>
+                    <input
+                      type="password"
+                      value={accessKey}
+                      onChange={(e) => setAccessKey(e.target.value)}
+                      className="num border bg-[color:var(--bg-deep)] px-2.5 py-2 text-sm outline-none"
+                      style={{ borderColor: 'var(--line)' }}
+                      placeholder="••••••••••••••••"
+                    />
+                  </label>
+                </>
+              )}
 
               {rejected && (
                 <p className="text-[10px] font-bold uppercase tracking-widest text-critical">ACCESS KEY REJECTED — RETRY</p>
+              )}
+              {authError && (
+                <p className="text-[10px] font-bold uppercase tracking-widest text-critical">{authError}</p>
+              )}
+              {verifyNotice && (
+                <p className="text-[10px] font-bold uppercase tracking-widest text-caution">{verifyNotice}</p>
+              )}
+              {!supabase && (
+                <p className="text-[9px] uppercase tracking-widest text-caution">
+                  SUPABASE NOT CONFIGURED — DEMO AUTH ACTIVE
+                </p>
               )}
 
               <div className="relative mt-1">
@@ -174,16 +319,20 @@ export function Access() {
                 />
                 <button
                   type="submit"
-                  disabled={booting || callsign.trim().length < 3}
+                  disabled={booting || busy}
                   className="w-full border border-[var(--accent)] bg-accent-soft px-4 py-2.5 text-[11px] font-bold uppercase tracking-[0.24em] text-accent transition-opacity hover:opacity-85 disabled:cursor-not-allowed disabled:opacity-35"
                 >
-                  Authenticate.
+                  {submitLabel}
                 </button>
               </div>
             </form>
 
             <p className="mt-4 text-[9px] uppercase tracking-widest text-muted">
-              DEMO ACCESS KEY: <span className="text-accent">{DEMO_KEY}</span> · SIH 2026 · PS 26054 · TEAM ALPHA Q
+              {supabase ? (
+                <>EMAIL + PASSWORD AUTH · SIH 2026 · PS 26054 · TEAM ALPHA Q</>
+              ) : (
+                <>DEMO ACCESS KEY: <span className="text-accent">{DEMO_KEY}</span> · SIH 2026 · PS 26054 · TEAM ALPHA Q</>
+              )}
             </p>
           </div>
         </motion.div>

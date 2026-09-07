@@ -5,6 +5,7 @@ import { useUiStore } from '../state/uiStore';
 import { fmtClock } from '../lib/format';
 import { getSession } from '../lib/session';
 import { ThemeSwitch } from './ThemeSwitch';
+import { supabase } from '../lib/supabase';
 import type { EngineMode } from '../lib/types';
 
 const NAV = [
@@ -107,6 +108,7 @@ export function HeaderBar() {
         <button
           type="button"
           onClick={() => {
+            void supabase?.auth.signOut().catch(() => undefined);
             try {
               localStorage.removeItem('vyom.session');
             } catch {

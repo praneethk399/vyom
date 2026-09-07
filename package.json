@@ -17,6 +17,7 @@
     "@google/genai": "^2.21.0",
     "@react-three/drei": "^9.122.0",
     "@react-three/fiber": "^8.18.0",
+    "@supabase/supabase-js": "^2.116.0",
     "animejs": "^3.2.2",
     "cors": "^2.8.5",
     "express": "^4.21.2",
@@ -44,5 +45,11 @@
     "typescript": "~5.6.3",
     "vite": "^6.4.3",
     "vitest": "^2.1.8"
+  },
+  "allowScripts": {
+    "@google/genai@2.21.0": true,
+    "esbuild@0.28.2": true,
+    "esbuild@0.21.5": true,
+    "esbuild@0.25.12": true
   }
 }
