@@ -13,6 +13,9 @@ export type AlertCategory = 'PREDICTIVE_PRECURSOR' | 'ACTIVE_LIMIT' | 'SYSTEM_AD
 
 export type AlertSource = 'threshold' | 'ai' | 'system';
 
+/** SMS delivery outcome for scenario alerts — shown in the Alert Feed */
+export type SmsStatus = 'sent' | 'failed' | 'not-required';
+
 export const SUBSYSTEMS = [
   'Turbine',
   'Compressor',
@@ -73,6 +76,7 @@ export interface AlertNotification {
   parameter?: string;
   source: AlertSource;
   acknowledged: boolean;
+  sms?: SmsStatus;
 }
 
 export interface ProbableFailureMode {

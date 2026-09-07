@@ -25,6 +25,7 @@ interface AlertState {
   acknowledge: (id: string) => void;
   acknowledgeAll: () => void;
   clear: () => void;
+  setSmsStatus: (id: string, sms: AlertNotification['sms']) => void;
   markPrecursor: (key: string, ts: number) => void;
   isPrecursorFresh: (key: string, now: number) => boolean;
 }
@@ -53,6 +54,9 @@ export const useAlertStore = create<AlertState>()((set, get) => ({
   acknowledgeAll: () => set((s) => ({ alerts: s.alerts.map((a) => ({ ...a, acknowledged: true })) })),
 
   clear: () => set({ alerts: [] }),
+
+  setSmsStatus: (id, sms) =>
+    set((s) => ({ alerts: s.alerts.map((a) => (a.id === id ? { ...a, sms } : a)) })),
 
   markPrecursor: (key, ts) =>
     set((s) => ({ lastPrecursorAt: { ...s.lastPrecursorAt, [key]: ts } })),

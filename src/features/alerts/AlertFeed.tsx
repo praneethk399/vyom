@@ -10,6 +10,12 @@ const CATEGORY_SHORT: Record<AlertNotification['category'], string> = {
   SYSTEM_ADVISORY: 'SYS',
 };
 
+const SMS_CHIP: Record<string, { label: string; cls: string }> = {
+  sent: { label: 'SMS SENT', cls: 'text-nominal' },
+  failed: { label: 'SMS FAILED', cls: 'text-critical' },
+  'not-required': { label: 'SMS NOT REQUIRED', cls: 'text-muted' },
+};
+
 export function AlertFeed({ limit = 30 }: { limit?: number }) {
   const alerts = useAlertStore((s) => s.alerts);
   const acknowledge = useAlertStore((s) => s.acknowledge);
@@ -54,7 +60,14 @@ export function AlertFeed({ limit = 30 }: { limit?: number }) {
                   <span className="num text-[8px] text-muted">{fmtClock(a.ts)}</span>
                 </span>
                 <span className="cas-msg-title text-[10px] font-semibold leading-tight">{a.title}</span>
-                <span className="text-[9px] leading-snug text-muted">{a.message}</span>
+                <span className="flex items-center justify-between gap-2">
+                  <span className="text-[9px] leading-snug text-muted">{a.message}</span>
+                  {a.sms && SMS_CHIP[a.sms] && (
+                    <span className={`num shrink-0 text-[8px] font-bold tracking-widest ${SMS_CHIP[a.sms].cls}`}>
+                      {SMS_CHIP[a.sms].label}
+                    </span>
+                  )}
+                </span>
               </motion.button>
             );
           })}

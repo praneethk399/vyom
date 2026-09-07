@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import datasetsRouter from './routes/datasets';
 import diagnoseRouter from './routes/diagnose';
+import alertsRouter from './routes/alerts';
 
 const rawPort = Number(process.env.PORT ?? 3001);
 const PORT = Number.isFinite(rawPort) && rawPort > 0 ? rawPort : 3001;
@@ -16,6 +17,7 @@ app.get('/api/health', (_req, res) => {
 
 app.use('/api/datasets', datasetsRouter);
 app.use('/api/diagnose', diagnoseRouter);
+app.use('/api/alerts', alertsRouter);
 
 app.listen(PORT, () => {
   console.log(`[vyom] server listening on http://localhost:${PORT}`);
