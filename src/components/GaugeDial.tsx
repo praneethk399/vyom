@@ -52,12 +52,25 @@ export function GaugeDial({
           const [x1, y1] = polar(cx, cy, r + 8, tk);
           return <line key={tk} x1={x0} y1={y0} x2={x1} y2={y1} stroke="var(--line-strong)" strokeWidth={1} />;
         })}
-        <path d={arcPath(cx, cy, r, t)} fill="none" stroke={color} strokeWidth={4} strokeLinecap="butt" />
+        {/* full-length path, dash-eased to the value so the arc animates */}
+        <path
+          d={arcPath(cx, cy, r, 1)}
+          fill="none"
+          stroke={color}
+          strokeWidth={4}
+          strokeLinecap="butt"
+          pathLength={1}
+          strokeDasharray={1}
+          strokeDashoffset={1 - t}
+          className="arc-fill"
+        />
       </svg>
-      <div className="-mt-1 flex flex-col items-center">
-        <CountUp value={value} format={format} className="glow-accent text-lg font-bold leading-none" style={{ color }} />
-        <span className="text-[9px] text-muted">{unit}</span>
-        <span className="mt-0.5 eyebrow !text-[8px]" style={{ color: severity === 'nominal' ? undefined : color }}>
+      <div className="-mt-1 flex flex-col items-center gap-1">
+        <span className="cas-readout">
+          <CountUp value={value} format={format} className="glow-accent text-lg font-bold leading-none" style={{ color }} />
+          <span className="text-[9px] text-muted">{unit}</span>
+        </span>
+        <span className="eyebrow !text-[8px]" style={{ color: severity === 'nominal' ? undefined : color }}>
           {label}
         </span>
       </div>

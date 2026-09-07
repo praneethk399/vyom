@@ -40,7 +40,7 @@ export function HeaderBar() {
   return (
     <header className="app-header hud-panel sticky top-0 z-30 flex h-12 items-center gap-3 px-3" style={{ background: 'var(--bg)' }}>
       <NavLink to="/command" className="flex items-baseline gap-1.5" aria-label="VYOM home">
-        <span className="glow-accent text-lg font-bold tracking-[0.28em] text-accent" style={{ fontFamily: 'var(--font-display)' }}>
+        <span className="glow-accent logo-breathe text-lg font-bold tracking-[0.28em] text-accent" style={{ fontFamily: 'var(--font-display)' }}>
           VYOM
         </span>
         <span className="hidden text-[9px] font-semibold tracking-[0.2em] text-muted sm:inline">GAS418S · TWIN OS</span>

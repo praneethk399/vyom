@@ -1,10 +1,10 @@
 import type { Severity } from './types';
 
-export const ACCENT = '#22d3ee';
-export const MUTED = '#70818c';
+export const ACCENT = '#30e07e';
+export const MUTED = '#6f8a80';
 
 export const SEVERITY_COLOR: Record<Severity, string> = {
-  nominal: '#2dd4bf',
+  nominal: '#34d97f',
   caution: '#fbbf24',
   warning: '#f59e0b',
   critical: '#ef4444',

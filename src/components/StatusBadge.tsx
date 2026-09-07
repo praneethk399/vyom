@@ -16,8 +16,8 @@ export function StatusBadge({ severity, label, pulse = false, className = '' }: 
       style={{ color, borderColor: `${color}66`, background: `${color}14` }}
     >
       <span
-        className={`h-1.5 w-1.5 rounded-full ${pulse ? 'blink' : ''}`}
-        style={{ background: color }}
+        className={`cas-glyph cas-glyph-${severity} ${pulse ? 'blink' : ''}`}
+        style={{ color }}
         aria-hidden="true"
       />
       {label ?? SEVERITY_LABEL[severity]}

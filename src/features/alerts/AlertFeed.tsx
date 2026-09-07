@@ -45,12 +45,15 @@ export function AlertFeed({ limit = 30 }: { limit?: number }) {
                 style={{ borderLeftColor: color }}
               >
                 <span className="flex items-center justify-between gap-2">
-                  <span className="text-[8px] font-bold uppercase tracking-widest" style={{ color }}>
-                    {a.severity.toUpperCase()} · {CATEGORY_SHORT[a.category]}
+                  <span className="flex items-center gap-1.5">
+                    <span className={`cas-glyph cas-glyph-${a.severity}`} style={{ color }} aria-hidden="true" />
+                    <span className="text-[8px] font-bold uppercase tracking-widest" style={{ color }}>
+                      {CATEGORY_SHORT[a.category]} · {a.severity.toUpperCase()}
+                    </span>
                   </span>
                   <span className="num text-[8px] text-muted">{fmtClock(a.ts)}</span>
                 </span>
-                <span className="text-[10px] font-semibold leading-tight">{a.title}</span>
+                <span className="cas-msg-title text-[10px] font-semibold leading-tight">{a.title}</span>
                 <span className="text-[9px] leading-snug text-muted">{a.message}</span>
               </motion.button>
             );
