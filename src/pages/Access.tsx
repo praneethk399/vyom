@@ -32,6 +32,8 @@ function supabaseMsg(message: string): string {
   if (m.includes('email not confirmed')) return 'EMAIL NOT CONFIRMED — CHECK YOUR INBOX';
   if (m.includes('already registered')) return 'EMAIL ALREADY REGISTERED — SIGN IN INSTEAD';
   if (m.includes('at least 6 characters')) return 'PASSWORD MUST BE AT LEAST 6 CHARACTERS';
+  if (m.includes('user not found') || m.includes('no user found')) return 'EMAIL NOT FOUND — REGISTER FIRST';
+  if (m.includes('rate limit')) return 'TOO MANY REQUESTS — WAIT AND RETRY';
   return message.toUpperCase().slice(0, 72);
 }
 
@@ -40,6 +42,7 @@ export function Access() {
   const [callsign, setCallsign] = useState('');
   const [accessKey, setAccessKey] = useState('');
   const [authMode, setAuthMode] = useState<AuthMode>('signin');
+  const [resetMode, setResetMode] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [authError, setAuthError] = useState<string | null>(null);
@@ -92,13 +95,30 @@ export function Access() {
       return;
     }
 
-    if (!email.trim() || password.length < 6) {
-      setAuthError('ENTER EMAIL + PASSWORD (MIN 6 CHARACTERS)');
+    if (!email.trim()) {
+      setAuthError('ENTER YOUR EMAIL ADDRESS');
       return;
     }
     setBusy(true);
     setAuthError(null);
     setVerifyNotice(null);
+
+    // Forgot-password → send a reset email; never grants access.
+    if (resetMode) {
+      const { error } = await supabase.auth.resetPasswordForEmail(email.trim());
+      setBusy(false);
+      if (error) {
+        setAuthError(supabaseMsg(error.message));
+        return;
+      }
+      setVerifyNotice('RESET EMAIL SENT — FOLLOW THE LINK TO SET A NEW PASSWORD');
+      return;
+    }
+
+    if (password.length < 6) {
+      setAuthError('ENTER EMAIL + PASSWORD (MIN 6 CHARACTERS)');
+      return;
+    }
     const operator = emailToCallsign(email);
 
     if (authMode === 'signin') {
@@ -135,9 +155,11 @@ export function Access() {
     ? 'Authenticate.'
     : busy
       ? 'Please wait…'
-      : authMode === 'register'
-        ? 'Create account.'
-        : 'Sign in.';
+      : resetMode
+        ? 'Send reset email.'
+        : authMode === 'register'
+          ? 'Create account.'
+          : 'Sign in.';
 
   const authChip = (mode: AuthMode, label: string) => (
     <button
@@ -240,10 +262,16 @@ export function Access() {
             <form onSubmit={submit} className="mt-6 flex flex-col gap-3">
               {supabase ? (
                 <>
-                  <div className="flex items-center gap-1.5" role="group" aria-label="Auth mode">
-                    {authChip('signin', 'SIGN IN')}
-                    {authChip('register', 'REGISTER')}
-                  </div>
+                  {resetMode ? (
+                    <p className="text-[10px] uppercase tracking-widest text-muted">
+                      ENTER THE REGISTERED EMAIL — WE'LL SEND A RESET LINK.
+                    </p>
+                  ) : (
+                    <div className="flex items-center gap-1.5" role="group" aria-label="Auth mode">
+                      {authChip('signin', 'SIGN IN')}
+                      {authChip('register', 'REGISTER')}
+                    </div>
+                  )}
                   <label className="flex flex-col gap-1">
                     <span className="eyebrow">EMAIL</span>
                     <input
@@ -256,18 +284,46 @@ export function Access() {
                       placeholder="OPERATOR@VYOM.AERO"
                     />
                   </label>
-                  <label className="flex flex-col gap-1">
-                    <span className="eyebrow">PASSWORD</span>
-                    <input
-                      type="password"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      autoComplete={authMode === 'signin' ? 'current-password' : 'new-password'}
-                      className="num border bg-[color:var(--bg-deep)] px-2.5 py-2 text-sm outline-none"
-                      style={{ borderColor: 'var(--line)' }}
-                      placeholder="••••••••••••"
-                    />
-                  </label>
+                  {!resetMode && (
+                    <label className="flex flex-col gap-1">
+                      <span className="eyebrow">PASSWORD</span>
+                      <input
+                        type="password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        autoComplete={authMode === 'signin' ? 'current-password' : 'new-password'}
+                        className="num border bg-[color:var(--bg-deep)] px-2.5 py-2 text-sm outline-none"
+                        style={{ borderColor: 'var(--line)' }}
+                        placeholder="••••••••••••"
+                      />
+                    </label>
+                  )}
+                  {!resetMode && authMode === 'signin' && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setResetMode(true);
+                        setAuthError(null);
+                        setVerifyNotice(null);
+                      }}
+                      className="self-end text-[9px] font-bold uppercase tracking-widest text-muted underline-offset-2 transition-colors hover:text-accent hover:underline"
+                    >
+                      FORGOT PASSWORD?
+                    </button>
+                  )}
+                  {resetMode && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setResetMode(false);
+                        setAuthError(null);
+                        setVerifyNotice(null);
+                      }}
+                      className="self-start text-[9px] font-bold uppercase tracking-widest text-muted underline-offset-2 transition-colors hover:text-accent hover:underline"
+                    >
+                      ← BACK TO SIGN IN
+                    </button>
+                  )}
                 </>
               ) : (
                 <>

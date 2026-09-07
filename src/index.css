@@ -9,49 +9,49 @@
 /* Semantic tokens — same severity system, different base luminance    */
 /* ------------------------------------------------------------------ */
 :root {
-  --bg: #020409;
-  --bg-deep: #010307;
-  --panel: #070c12;
-  --panel-2: #0a1118;
-  --panel-3: #0d1620;
-  --line: rgba(126, 255, 180, 0.13);
-  --line-strong: rgba(48, 224, 126, 0.5);
-  --text: #d9e9e2;
-  --muted: #6f8a80;
-  --accent: #30e07e;
-  --accent-soft: rgba(48, 224, 126, 0.1);
-  --info: #22d3ee;
-  --nominal: #34d97f;
-  --caution: #fbbf24;
-  --warning: #f59e0b;
-  --critical: #ef4444;
-  --good: #34d97f;
-  --monitor: #fbbf24;
-  --action: #ef4444;
-  --grid: rgba(48, 224, 126, 0.06);
+  --bg: #0b0e11;
+  --bg-deep: #07090c;
+  --panel: #12161b;
+  --panel-2: #181d24;
+  --panel-3: #1f262e;
+  --line: rgba(220, 228, 232, 0.1);
+  --line-strong: rgba(47, 191, 106, 0.45);
+  --text: #d8dde0;
+  --muted: #7a858c;
+  --accent: #2fbf6a;
+  --accent-soft: rgba(47, 191, 106, 0.1);
+  --info: #8a97a0;
+  --nominal: #34c87a;
+  --caution: #e0a83c;
+  --warning: #d48a2a;
+  --critical: #e04b3c;
+  --good: #34c87a;
+  --monitor: #e0a83c;
+  --action: #e04b3c;
+  --grid: rgba(200, 212, 220, 0.04);
 }
 
 .light {
-  --bg: #e9eef2;
-  --bg-deep: #dfe6ec;
-  --panel: #f7fafc;
-  --panel-2: #eef3f7;
-  --panel-3: #e4ecf1;
-  --line: rgba(11, 138, 79, 0.22);
-  --line-strong: rgba(11, 138, 79, 0.55);
-  --text: #0c1a14;
-  --muted: #4d6a5e;
-  --accent: #0b8a4f;
-  --accent-soft: rgba(11, 138, 79, 0.12);
-  --info: #0e7490;
-  --nominal: #0e8a52;
-  --caution: #b45309;
-  --warning: #c2410c;
-  --critical: #dc2626;
-  --good: #0e8a52;
-  --monitor: #b45309;
-  --action: #dc2626;
-  --grid: rgba(11, 138, 79, 0.08);
+  --bg: #e9edf0;
+  --bg-deep: #dfe5ea;
+  --panel: #f7f9fa;
+  --panel-2: #eef2f4;
+  --panel-3: #e3e9ed;
+  --line: rgba(20, 40, 30, 0.18);
+  --line-strong: rgba(15, 105, 55, 0.5);
+  --text: #12201a;
+  --muted: #5c6b72;
+  --accent: #0f6937;
+  --accent-soft: rgba(15, 105, 55, 0.1);
+  --info: #57636b;
+  --nominal: #0f7a42;
+  --caution: #9a6a12;
+  --warning: #b06a14;
+  --critical: #cf3726;
+  --good: #0f7a42;
+  --monitor: #9a6a12;
+  --action: #cf3726;
+  --grid: rgba(20, 60, 45, 0.06);
 }
 
 /* ------------------------------------------------------------------ */
@@ -122,162 +122,29 @@ body {
 }
 
 /* ------------------------------------------------------------------ */
-/* Cyberpunk HUD layer — corner brackets, glow, scanlines, reticle     */
+/* Engineering layer — flat panels, hairline borders, restrained state */
 /* ------------------------------------------------------------------ */
 
-/* Panel with targeting-corner brackets on all four corners.
-   Glass-cockpit display: green CRT tint, inner bezel hairline, and a slow
-   sheen sweep across the glass. */
+/* Flat instrument panel: surface + thin hairline, no glow or sheen. */
 .hud-panel {
   position: relative;
   border: 1px solid var(--line);
   background-color: var(--panel);
-  background-image:
-    linear-gradient(105deg, transparent 42%, rgba(48, 224, 126, 0.05) 50%, transparent 58%),
-    radial-gradient(130% 100% at 50% 0%, rgba(48, 224, 126, 0.055), transparent 62%);
-  background-size: 300% 100%, 100% 100%;
-  background-repeat: no-repeat;
-  box-shadow:
-    inset 0 0 0 1px rgba(255, 255, 255, 0.025),
-    inset 0 1px 0 rgba(48, 224, 126, 0.07);
-  animation: hud-sheen 13s ease-in-out infinite;
-}
-.light .hud-panel {
-  background-image:
-    linear-gradient(105deg, transparent 42%, rgba(11, 138, 79, 0.05) 50%, transparent 58%),
-    radial-gradient(130% 100% at 50% 0%, rgba(11, 138, 79, 0.05), transparent 62%);
-}
-@keyframes hud-sheen {
-  0%, 16% { background-position: 100% 0, 0 0; }
-  52%, 100% { background-position: -200% 0, 0 0; }
-}
-.hud-panel::before {
-  content: '';
-  position: absolute;
-  inset: -1px;
-  pointer-events: none;
-  background:
-    linear-gradient(var(--accent), var(--accent)) left top / 16px 2px,
-    linear-gradient(var(--accent), var(--accent)) left top / 2px 16px,
-    linear-gradient(var(--accent), var(--accent)) right top / 16px 2px,
-    linear-gradient(var(--accent), var(--accent)) right top / 2px 16px,
-    linear-gradient(var(--accent), var(--accent)) left bottom / 16px 2px,
-    linear-gradient(var(--accent), var(--accent)) left bottom / 2px 16px,
-    linear-gradient(var(--accent), var(--accent)) right bottom / 16px 2px,
-    linear-gradient(var(--accent), var(--accent)) right bottom / 2px 16px;
-  background-repeat: no-repeat;
-  opacity: 0.6;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.02);
 }
 
-/* neon glow for accent readouts */
-.glow-accent {
-  text-shadow:
-    0 0 12px rgba(48, 224, 126, 0.5),
-    0 0 2px rgba(48, 224, 126, 0.85);
-}
-
-/* slow breathing glow — header wordmark */
-@keyframes logo-breathe {
-  0%, 100% { text-shadow: 0 0 10px rgba(48, 224, 126, 0.35), 0 0 2px rgba(48, 224, 126, 0.7); }
-  50% { text-shadow: 0 0 20px rgba(48, 224, 126, 0.7), 0 0 3px rgba(48, 224, 126, 0.95); }
-}
-.logo-breathe { animation: logo-breathe 4.2s ease-in-out infinite; }
-.glow-soft {
-  text-shadow: 0 0 8px currentColor;
-}
-
-/* fixed HUD frame — corner brackets at the viewport edges */
-body::before {
-  content: '';
-  position: fixed;
-  inset: 0;
-  z-index: 40;
-  pointer-events: none;
-  background:
-    linear-gradient(var(--accent), var(--accent)) 14px 14px / 30px 2px,
-    linear-gradient(var(--accent), var(--accent)) 14px 14px / 2px 30px,
-    linear-gradient(var(--accent), var(--accent)) calc(100% - 14px) 14px / 30px 2px,
-    linear-gradient(var(--accent), var(--accent)) calc(100% - 14px) 14px / 2px 30px,
-    linear-gradient(var(--accent), var(--accent)) 14px calc(100% - 14px) / 30px 2px,
-    linear-gradient(var(--accent), var(--accent)) 14px calc(100% - 14px) / 2px 30px,
-    linear-gradient(var(--accent), var(--accent)) calc(100% - 14px) calc(100% - 14px) / 30px 2px,
-    linear-gradient(var(--accent), var(--accent)) calc(100% - 14px) calc(100% - 14px) / 2px 30px;
-  background-repeat: no-repeat;
-  opacity: 0.45;
-}
-
-/* scanline overlay */
-body::after {
-  content: '';
-  position: fixed;
-  inset: 0;
-  z-index: 60;
-  pointer-events: none;
-  background: repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.35) 0 1px, transparent 1px 4px);
-  opacity: 0.14;
-}
-.light body::after {
-  background: repeating-linear-gradient(0deg, rgba(14, 116, 144, 0.25) 0 1px, transparent 1px 4px);
-  opacity: 0.06;
-}
-
-/* viewer reticle — concentric rings behind the 3D scene */
-.hud-reticle {
-  position: relative;
-  width: min(62%, 540px);
-  aspect-ratio: 1;
-  border-radius: 50%;
-  border: 1px solid var(--line);
-  opacity: 0.55;
-}
-.hud-reticle::before {
-  content: '';
-  position: absolute;
-  inset: -7%;
-  border-radius: 50%;
-  border: 1px dashed var(--line-strong);
-  opacity: 0.5;
-  animation: reticle-spin 48s linear infinite;
-}
-.hud-reticle::after {
-  content: '';
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  width: 10px;
-  height: 10px;
-  margin: -5px 0 0 -5px;
-  border: 1px solid var(--accent);
-  transform: rotate(45deg);
-  opacity: 0.8;
-}
-@keyframes reticle-spin {
-  to { transform: rotate(360deg); }
-}
-
-/* header: hairline + neon edge glow along the bottom */
+/* header: hairline rule, no neon edge */
 .app-header {
   border-bottom: 1px solid var(--line);
 }
-.app-header::after {
-  content: '';
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: -1px;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, var(--accent) 18%, var(--accent) 82%, transparent);
-  opacity: 0.35;
-  pointer-events: none;
-}
 
-/* chamfered angular chip (cyberpunk control) */
+/* angular control chip (subtle bevel, not a sci-fi clip) */
 .hud-chip {
-  clip-path: polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px);
+  border-radius: 2px;
 }
 .hud-chip:hover,
 nav a:hover {
-  text-shadow: 0 0 8px currentColor;
+  color: var(--accent);
 }
 
 /* ------------------------------------------------------------------ */
