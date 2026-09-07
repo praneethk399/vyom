@@ -106,46 +106,52 @@ function runOnDeviceModel(): void {
  * raises PREDICTIVE_PRECURSOR alerts for failures above the confidence bar.
  * If the call errors or rate-limits, the deterministic threshold layer AND
  * the on-device trained model continue untouched.
+ *
+ * Exported separately from the hook so tests can drive it headlessly (fake
+ * timers + mocked fetch); useDiagnostics just mounts and unmounts it.
+ * Returns a stop function.
  */
+export function startDiagnosticsLoop(): () => void {
+  void modelMeta; // loaded with the bundle; see aiInference.modelMeta
+  // Overlap gate: a slow /api/diagnose response must never overwrite a
+  // newer one. The on-device passes below run every tick regardless.
+  let inFlight = false;
+  const tick = async () => {
+    raiseDeterministicPrecursors();
+    runOnDeviceModel();
+    if (inFlight) return;
+    const s = useTelemetryStore.getState();
+    if (s.ring.length < 10) return;
+    inFlight = true;
+    const store = useDiagnosticsStore.getState();
+    store.setRunning(true);
+    try {
+      const res = await fetch('/api/diagnose', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          window: sampleWindow(s.ring, 90).map((f) => ({ ts: f.ts, telemetry: f.telemetry })),
+          fault: s.fault,
+          mode: s.mode,
+          dataset: s.datasetMeta?.name ?? null,
+        }),
+      });
+      if (!res.ok) throw new Error(`diagnose ${res.status}`);
+      const data = (await res.json()) as DiagnoseResponse;
+      useDiagnosticsStore.getState().setReport(data.report, data.engine);
+      raiseAiPrecursors(data.report);
+    } catch (err) {
+      useDiagnosticsStore.getState().setError(err instanceof Error ? err.message : 'diagnose failed');
+    } finally {
+      inFlight = false;
+      useDiagnosticsStore.getState().setRunning(false);
+    }
+  };
+  const id = setInterval(tick, DIAGNOSE_INTERVAL_MS);
+  void tick();
+  return () => clearInterval(id);
+}
+
 export function useDiagnostics(): void {
-  useEffect(() => {
-    void modelMeta; // loaded with the bundle; see aiInference.modelMeta
-    // Overlap gate: a slow /api/diagnose response must never overwrite a
-    // newer one. The on-device passes below run every tick regardless.
-    let inFlight = false;
-    const tick = async () => {
-      raiseDeterministicPrecursors();
-      runOnDeviceModel();
-      if (inFlight) return;
-      const s = useTelemetryStore.getState();
-      if (s.ring.length < 10) return;
-      inFlight = true;
-      const store = useDiagnosticsStore.getState();
-      store.setRunning(true);
-      try {
-        const res = await fetch('/api/diagnose', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            window: sampleWindow(s.ring, 90).map((f) => ({ ts: f.ts, telemetry: f.telemetry })),
-            fault: s.fault,
-            mode: s.mode,
-            dataset: s.datasetMeta?.name ?? null,
-          }),
-        });
-        if (!res.ok) throw new Error(`diagnose ${res.status}`);
-        const data = (await res.json()) as DiagnoseResponse;
-        useDiagnosticsStore.getState().setReport(data.report, data.engine);
-        raiseAiPrecursors(data.report);
-      } catch (err) {
-        useDiagnosticsStore.getState().setError(err instanceof Error ? err.message : 'diagnose failed');
-      } finally {
-        inFlight = false;
-        useDiagnosticsStore.getState().setRunning(false);
-      }
-    };
-    const id = window.setInterval(tick, DIAGNOSE_INTERVAL_MS);
-    tick();
-    return () => window.clearInterval(id);
-  }, []);
+  useEffect(() => startDiagnosticsLoop(), []);
 }
