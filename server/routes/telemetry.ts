@@ -1,11 +1,15 @@
 import { Router } from 'express';
-import { engineSim } from '../lib/engineSim';
+import { telemetryService } from '../services/telemetryService';
+import { asyncHandler } from '../middleware/errorHandler';
 
-/** GET /api/telemetry — current simulated engine state (scenario-aware). */
+/** GET /api/telemetry — current simulated engine state. */
 const router = Router();
 
-router.get('/', (_req, res) => {
-  res.json(engineSim.snapshot());
-});
+router.get(
+  '/',
+  asyncHandler((_req, res) => {
+    res.json(telemetryService.snapshot());
+  }),
+);
 
 export default router;

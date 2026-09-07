@@ -1,11 +1,10 @@
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import type { Server } from 'http';
 import { buildApp } from '../server/app';
-import { engineSim } from '../server/lib/engineSim';
-import { evaluateScenario } from '../server/lib/alertEngine';
-import { formatSmsMessage, sendAlertSms } from '../server/lib/sms';
-import { markSmsSent, smsDuplicate } from '../server/lib/alertStore';
-
+import { telemetryService } from '../server/services/telemetryService';
+import { evaluateScenario } from '../server/services/alertEngine';
+import { formatSmsMessage, sendAlertSMS } from '../server/services/smsService';
+import { markSmsSent, smsDuplicate } from '../server/services/alertStore';
 // ---------------------------------------------------------------------------
 // Pure units — alert engine + SMS formatting + dedup primitives
 // ---------------------------------------------------------------------------
@@ -21,7 +20,7 @@ describe('alert engine', () => {
       ['battery_sag', 'BATTERY_SAG', 'WARNING'],
     ];
     for (const [scenario, alertType, severity] of expectations) {
-      engineSim.applyScenario(scenario);
+      telemetryService.applyScenario(scenario);
       const a = evaluateScenario(scenario);
       expect(a.alertType, scenario).toBe(alertType);
       expect(a.severity, scenario).toBe(severity);
@@ -31,12 +30,12 @@ describe('alert engine', () => {
   });
 
   it('captures live values/thresholds and nominal yields a NORMAL system alert', () => {
-    engineSim.applyScenario('vibration_growth');
+    telemetryService.applyScenario('vibration_growth');
     const vib = evaluateScenario('vibration_growth');
     expect(vib.value).toBeCloseTo(2.87);
     expect(vib.threshold).toBe(2.5);
 
-    engineSim.applyScenario('nominal');
+    telemetryService.applyScenario('nominal');
     const n = evaluateScenario('nominal');
     expect(n.alertType).toBe('SYSTEM_NOMINAL');
     expect(n.severity).toBe('NORMAL');
@@ -72,7 +71,7 @@ describe('SMS service', () => {
   it('never sends for NORMAL and does not throw with no key (dev-test mode)', async () => {
     vi.stubEnv('FAST2SMS_API_KEY', '');
     vi.stubGlobal('fetch', fetchMock);
-    const out = await sendAlertSms({
+    const out = await sendAlertSMS({
       alertType: 'SYSTEM_NOMINAL', severity: 'NORMAL', engineId: 'GAS418S', timestamp: '', scenario: 'nominal',
     });
     expect(out.sent).toBe(false);
@@ -83,7 +82,7 @@ describe('SMS service', () => {
     vi.stubEnv('FAST2SMS_API_KEY', 'key-123');
     vi.stubEnv('ALERT_PHONE_NUMBER', 'not-a-phone');
     fetchMock.mockReset();
-    const out = await sendAlertSms({
+    const out = await sendAlertSMS({
       alertType: 'TET_RUNAWAY', severity: 'CRITICAL', engineId: 'GAS418S', timestamp: '', scenario: 'tet_runaway',
     });
     expect(out.sent).toBe(false);
@@ -95,7 +94,7 @@ describe('SMS service', () => {
     vi.stubEnv('FAST2SMS_API_KEY', 'key-123');
     vi.stubEnv('ALERT_PHONE_NUMBER', '+919999999999');
     fetchMock.mockReset().mockResolvedValue({ ok: true, json: async () => ({ return: false }) });
-    const failed = await sendAlertSms({
+    const failed = await sendAlertSMS({
       alertType: 'BATTERY_SAG', severity: 'WARNING', engineId: 'GAS418S', timestamp: '', scenario: 'battery_sag',
     });
     expect(failed.sent).toBe(false);
@@ -104,7 +103,7 @@ describe('SMS service', () => {
     expect(url).toContain('fast2sms.com');
 
     fetchMock.mockReset().mockResolvedValue({ ok: true, json: async () => ({ return: true }) });
-    const ok = await sendAlertSms({
+    const ok = await sendAlertSMS({
       alertType: 'FUEL_FLOW_ANOMALY', severity: 'WARNING', engineId: 'GAS418S', timestamp: '', scenario: 'fuel_flow_anomaly',
     });
     expect(ok.sent).toBe(true);
@@ -137,6 +136,7 @@ describe('VYOM backend API', () => {
   });
 
   afterAll(async () => {
+    vi.unstubAllEnvs();
     await new Promise<void>((resolve) => server.close(() => resolve()));
   });
 
@@ -152,7 +152,7 @@ describe('VYOM backend API', () => {
     expect(res.status).toBe(200);
     const t = (await res.json()) as Record<string, unknown>;
     expect(t.engineId).toBe('GAS418S');
-    for (const k of ['rpm', 'tet', 'thrust', 'oilPressure', 'vibration', 'fuelFlow', 'battery', 'health', 'predictedRUL', 'missionStatus', 'timestamp']) {
+    for (const k of ['rpm', 'tet', 'thrust', 'oilPressure', 'vibration', 'fuelFlow', 'batteryVoltage', 'health', 'predictedRUL', 'missionStatus', 'timestamp']) {
       expect(t, k).toHaveProperty(k);
     }
   });
@@ -172,7 +172,7 @@ describe('VYOM backend API', () => {
     expect(batBody.alert.severity).toBe('WARNING');
     expect(batBody.alert.alertType).toBe('BATTERY_SAG');
     expect(batBody.sms).toBe('sent'); // dev-test mode (no FAST2SMS_API_KEY)
-    expect(batBody.telemetry.battery).toBeCloseTo(22.4);
+    expect(batBody.telemetry.batteryVoltage).toBeCloseTo(22.4);
 
     // vibration_growth → CRITICAL, live value 2.87
     const vib = await post('/api/simulation/scenario', { scenario: 'vibration_growth' });
@@ -182,7 +182,7 @@ describe('VYOM backend API', () => {
     expect(vibBody.alert.value).toBeCloseTo(2.87);
     expect(vibBody.sms).toBe('sent');
     expect(vibBody.telemetry.vibration).toBeCloseTo(2.87);
-    expect(vibBody.telemetry.missionStatus).toBe('ENV RESTRICT');
+    expect(vibBody.telemetry.missionStatus).toBe('ENV_RESTRICT');
   });
 
   it('suppresses duplicate SMS for the same scenario within 5 minutes', async () => {
@@ -238,5 +238,33 @@ describe('VYOM backend API', () => {
     const dupBody = await dup.json();
     expect(dupBody.duplicate).toBe(true);
     expect(dupBody.sms).toBe('not-required');
+  });
+
+  it('unknown routes return JSON 404 without crashing', async () => {
+    const res = await fetch(`${base}/api/nope`);
+    expect(res.status).toBe(404);
+    const body = (await res.json()) as { ok: boolean };
+    expect(body.ok).toBe(false);
+  });
+
+  it('SMS failure never crashes the pipeline', async () => {
+    vi.stubEnv('FAST2SMS_API_KEY', 'key-123');
+    vi.stubEnv('ALERT_PHONE_NUMBER', '+919999999999');
+    const origFetch = globalThis.fetch;
+    globalThis.fetch = ((input: RequestInfo | URL, init?: RequestInit) =>
+      String(input).includes('fast2sms.com')
+        ? Promise.reject(new Error('provider down'))
+        : origFetch(input, init)) as typeof fetch;
+    const res = await post('/api/alerts', {
+      alertType: 'COMPRESSOR_SURGE', severity: 'CRITICAL', engineId: 'GAS418S',
+      parameter: 'pressureRatio', value: 9.2, threshold: 8.5, scenario: 'compressor_surge',
+      timestamp: new Date().toISOString(),
+    });
+    globalThis.fetch = origFetch;
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.ok).toBe(true);
+    expect(body.sms).toBe('failed');
+    expect(body.alert.sms).toBe('failed');
   });
 });

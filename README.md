@@ -42,7 +42,7 @@ Single Express server (`server/`, port 3001, proxied from Vite as `/api`).
 | Endpoint | Purpose |
 |---|---|
 | `GET /api/health` | liveness |
-| `GET /api/telemetry` | current simulated engine state (`engineId, rpm, tet, thrust, oilPressure, vibration, fuelFlow, battery, health, predictedRUL, missionStatus, timestamp`) |
+| `GET /api/telemetry` | current simulated engine state (`engineId, rpm, tet, thrust, oilPressure, vibration, fuelFlow, batteryVoltage, health, predictedRUL, missionStatus, timestamp`) |
 | `POST /api/simulation/scenario` | apply a scenario: `nominal \| tet_runaway \| vibration_growth \| oil_pressure_loss \| compressor_surge \| fuel_flow_anomaly \| battery_sag`. Runs the centralized alert engine → history → SMS; returns telemetry + alert |
 | `POST /api/alerts` | ingest a standardized alert `{ alertType, severity, engineId, parameter, value, threshold, timestamp, scenario }`; validate → store → SMS (WARNING/CRITICAL only, 5-min duplicate window) |
 | `GET /api/alerts` | recent alert history for the dashboard |

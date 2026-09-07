@@ -44,7 +44,7 @@ interface ServerSnapshot {
   oilPressure: number;
   vibration: number;
   fuelFlow: number;
-  battery: number;
+  batteryVoltage: number;
   health: number;
   predictedRUL: number;
   missionStatus: string;
@@ -91,7 +91,7 @@ function adoptSnapshot(s: ServerSnapshot): void {
     oilPressure: s.oilPressure,
     vibration: s.vibration,
     fuelFlow: s.fuelFlow,
-    batteryVoltage: s.battery,
+    batteryVoltage: s.batteryVoltage,
     healthIndex: s.health,
     rulHours: s.predictedRUL,
   };

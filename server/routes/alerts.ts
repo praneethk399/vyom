@@ -1,72 +1,74 @@
 import { Router } from 'express';
-import type { StandardAlert } from '../lib/alertEngine';
-import { recentAlerts } from '../lib/alertStore';
-import { runAlertPipeline } from '../lib/alertPipeline';
-import { rateLimit } from '../lib/rateLimit';
+import { processAlert } from '../services/alertEngine';
+import { recentAlerts } from '../services/alertStore';
+import { telemetryService } from '../services/telemetryService';
+import { validateAlertBody } from '../middleware/validation';
+import { asyncHandler } from '../middleware/errorHandler';
+import { rateLimit } from '../middleware/validation';
+import { ENGINE_ID } from '../models/telemetry';
+import type { StandardAlert } from '../models/alert';
 
 /**
  * Alert API:
- *   POST /api/alerts — ingest a standardized alert (validate, store, SMS for
- *                      WARNING/CRITICAL, 5-minute duplicate suppression)
- *   GET  /api/alerts — recent alert history for the dashboard
+ *   POST /api/alerts            — ingest a standardized alert (validate, record,
+ *                                 SMS for WARNING/CRITICAL, 5-min dedup)
+ *   GET  /api/alerts            — recent alert history for the dashboard
+ *   POST /api/test/critical-alert — DEVELOPMENT ONLY: force a VIBRATION_LIMIT_BREACH
+ *                                 CRITICAL alert through the whole pipeline
  */
 
-const SEVERITIES = ['NORMAL', 'WARNING', 'CRITICAL'] as const;
+const alertsRouter = Router();
 
-interface AlertBody {
-  alertType: unknown;
-  severity: unknown;
-  engineId: unknown;
-  parameter?: unknown;
-  value?: unknown;
-  threshold?: unknown;
-  timestamp?: unknown;
-  scenario?: unknown;
-}
-
-function isAlertBody(b: unknown): b is AlertBody {
-  if (typeof b !== 'object' || b === null) return false;
-  const a = b as Record<string, unknown>;
-  return (
-    typeof a.alertType === 'string' &&
-    typeof a.severity === 'string' &&
-    (SEVERITIES as readonly string[]).includes(a.severity) &&
-    typeof a.engineId === 'string'
-  );
-}
-
-const router = Router();
-
-router.get('/', (_req, res) => {
-  const limit = Number((_req.query.limit as string) ?? 50);
-  res.json({ ok: true, alerts: recentAlerts(Number.isFinite(limit) ? limit : 50) });
+alertsRouter.get('/', (_req, res) => {
+  const raw = Number((_req.query.limit as string | undefined) ?? 50);
+  const limit = Number.isFinite(raw) && raw > 0 ? raw : 50;
+  res.json({ ok: true, alerts: recentAlerts(limit) });
 });
 
-router.post('/', rateLimit({ windowMs: 60_000, max: 30 }), async (req, res) => {
-  if (!isAlertBody(req.body)) {
-    res.status(400).json({ ok: false, error: 'invalid alert payload' });
-    return;
-  }
-  const b = req.body;
-  const alert: StandardAlert = {
-    id: `alert:${Date.now()}`,
-    alertType: b.alertType as string,
-    severity: b.severity as StandardAlert['severity'],
-    engineId: b.engineId as string,
-    parameter: typeof b.parameter === 'string' ? b.parameter : undefined,
-    value: typeof b.value === 'number' ? b.value : undefined,
-    threshold: typeof b.threshold === 'number' ? b.threshold : undefined,
-    scenario: typeof b.scenario === 'string' ? b.scenario : 'unknown',
-    timestamp: typeof b.timestamp === 'string' ? b.timestamp : new Date().toISOString(),
-  };
+alertsRouter.post(
+  '/',
+  rateLimit({ windowMs: 60_000, max: 30 }),
+  asyncHandler(async (req, res) => {
+    const alert = validateAlertBody(req.body);
+    if (!alert) {
+      res.status(400).json({ ok: false, error: 'invalid alert payload' });
+      return;
+    }
+    const result = await processAlert(alert);
+    res.json({ ok: true, alert: result.alert, duplicate: result.duplicate, sms: result.sms });
+  }),
+);
 
-  const result = await runAlertPipeline(alert);
-  res.json({
-    ok: true,
-    alert: result.alert,
-    duplicate: result.duplicate,
-    sms: result.sms,
-  });
-});
+/** DEVELOPMENT / TEST ONLY — exercises the complete alert → storage → SMS chain. */
+const testRouter = Router();
 
-export default router;
+testRouter.post(
+  '/',
+  rateLimit({ windowMs: 60_000, max: 10 }),
+  asyncHandler(async (_req, res) => {
+    const snap = telemetryService.snapshot();
+    const alert: StandardAlert = {
+      id: `alert:${Date.now()}`,
+      alertType: 'VIBRATION_LIMIT_BREACH',
+      severity: 'CRITICAL',
+      engineId: ENGINE_ID,
+      parameter: 'vibration',
+      value: snap.vibration,
+      threshold: 2.5,
+      scenario: 'vibration_growth',
+      timestamp: new Date().toISOString(),
+    };
+    const result = await processAlert(alert);
+    res.json({
+      ok: true,
+      dev: true,
+      note: 'development/test endpoint — test VIBRATION_LIMIT_BREACH alert sent through the full pipeline',
+      alert: result.alert,
+      duplicate: result.duplicate,
+      sms: result.sms,
+    });
+  }),
+);
+
+export default alertsRouter;
+export { testRouter };

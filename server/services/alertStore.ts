@@ -1,12 +1,12 @@
-/**
- * Shared in-memory alert store: keeps recent alerts for GET /api/alerts and
- * enforces the 5-minute per (alertType, engine) SMS dedup window across every
- * entry point (simulation, direct POST, dev test endpoint).
- *
- * In-memory by design — this project has no database; a restart resets it.
- */
+import type { StandardAlert } from '../models/alert';
 
-import type { StandardAlert } from './alertEngine';
+/**
+ * Alert storage + SMS dedup. In-memory by design — the project has no
+ * database and Supabase is configured only for client-side auth, so alerts do
+ * not yet persist across restarts. `recordAlert` / `recentAlerts` shape the
+ * GET /api/alerts history; `smsDuplicate` / `markSmsSent` enforce the 5-minute
+ * per (engine, alertType) SMS window across every entry point.
+ */
 
 const HISTORY_MAX = 100;
 const SMS_TTL_MS = 5 * 60 * 1000;
@@ -29,7 +29,6 @@ export function smsDuplicate(alertType: string, engineId: string): boolean {
   return at !== undefined && Date.now() - at < SMS_TTL_MS;
 }
 
-/** Mark an SMS as sent (opens the dedup window). */
 export function markSmsSent(alertType: string, engineId: string): void {
   smsSentAt.set(`${alertType}:${engineId}`, Date.now());
 }

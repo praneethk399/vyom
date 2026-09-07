@@ -1,15 +1,16 @@
+import type { StandardAlert } from '../models/alert';
+
 /**
- * SMS delivery — Fast2SMS, credentials from server env only (never shipped to
- * the client): FAST2SMS_API_KEY + ALERT_PHONE_NUMBER.
+ * SMS service — Fast2SMS. Credentials come from server env only:
+ *   FAST2SMS_API_KEY, ALERT_PHONE_NUMBER
+ * Never exposed to the frontend (no VITE_ prefix).
  *
  * Failure handling is deliberate: a missing key, malformed phone number or
- * provider error never throws — it returns { sent:false } so the route can
- * respond 200 with sms:'failed' and the backend stays up. With no API key the
- * service runs in dev-test mode: the message is logged server-side and the
- * call reports success so the whole pipeline is exercisable without a key.
+ * provider error never throws — it returns { sent:false } so the pipeline can
+ * respond with sms:'failed' and telemetry/simulation keep running. With no
+ * API key the service logs the exact message (dev-test mode) and reports
+ * success so the whole chain is exercisable without a provider.
  */
-
-import type { StandardAlert } from './alertEngine';
 
 export type SmsOutcome = { sent: boolean; mode: 'fast2sms' | 'dev-test' };
 
@@ -17,7 +18,6 @@ function num(v: unknown): string {
   return typeof v === 'string' ? v.trim() : '';
 }
 
-/** Basic E.164-ish phone check — digits and leading + only, 7–15 digits. */
 function validPhone(p: string): boolean {
   return /^\+?[0-9]{7,15}$/.test(p);
 }
@@ -53,7 +53,6 @@ async function sendFast2Sms(a: StandardAlert): Promise<SmsOutcome> {
   const phone = num(process.env.ALERT_PHONE_NUMBER);
   const message = formatSmsMessage(a);
 
-  // No key → dev-test mode: log the exact message that would be sent.
   if (!key) {
     console.log(`[sms:dev-test] ${message}`);
     return { sent: true, mode: 'dev-test' };
@@ -83,10 +82,10 @@ async function sendFast2Sms(a: StandardAlert): Promise<SmsOutcome> {
 }
 
 /**
- * Central SMS entry point. Only WARNING and CRITICAL should reach it (the
- * callers enforce that); NORMAL is refused here as a final guard.
+ * Central SMS entry point. NORMAL is refused here as a final guard on top of
+ * the callers; only WARNING and CRITICAL should ever reach the provider.
  */
-export async function sendAlertSms(a: StandardAlert): Promise<SmsOutcome> {
+export async function sendAlertSMS(a: StandardAlert): Promise<SmsOutcome> {
   if (a.severity === 'NORMAL') return { sent: false, mode: 'dev-test' };
   return sendFast2Sms(a);
 }

@@ -2,10 +2,10 @@ import express from 'express';
 import cors from 'cors';
 import datasetsRouter from './routes/datasets';
 import diagnoseRouter from './routes/diagnose';
-import alertsRouter from './routes/alerts';
+import alertsRouter, { testRouter } from './routes/alerts';
 import telemetryRouter from './routes/telemetry';
 import simulationRouter from './routes/simulation';
-import testRouter from './routes/test';
+import { notFound, errorHandler } from './middleware/errorHandler';
 
 export function buildApp(): express.Express {
   const app = express();
@@ -22,6 +22,12 @@ export function buildApp(): express.Express {
   app.use('/api/telemetry', telemetryRouter);
   app.use('/api/simulation/scenario', simulationRouter);
   app.use('/api/test/critical-alert', testRouter);
+
+  // Centralized error handling — unknown routes and thrown/rejected handlers
+  // become JSON responses; the process never dies from a bad request or a
+  // failing dependency (e.g. SMS provider).
+  app.use(notFound);
+  app.use(errorHandler);
 
   return app;
 }
