@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>VYOM — Visual Explanation of This Thread's Changes</title>
+<style>
+  :root {
+    --bg: #060a12;
+    --panel: #0c1420;
+    --panel2: #101a29;
+    --line: #1d2b3e;
+    --line-strong: #2c4260;
+    --text: #d7e2ee;
+    --muted: #7e93a9;
+    --cyan: #35d6e8;
+    --cyan-dim: rgba(53, 214, 232, 0.14);
+    --amber: #f5b840;
+    --amber-dim: rgba(245, 184, 64, 0.12);
+    --red: #f0554f;
+    --red-dim: rgba(240, 85, 79, 0.12);
+    --green: #4ade80;
+    --mono: ui-monospace, "Cascadia Mono", Consolas, monospace;
+    --sans: system-ui, "Segoe UI", sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    *, *::before, *::after { animation: none !important; transition: none !important; }
+  }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font-family: var(--sans); line-height: 1.55; font-size: 15px;
+  }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 0 20px 80px; }
+  header.hero { padding: 48px 0 28px; border-bottom: 1px solid var(--line); margin-bottom: 8px; }
+  .eyebrow { font-family: var(--mono); font-size: 11px; letter-spacing: .22em; color: var(--cyan); text-transform: uppercase; }
+  h1 { font-size: clamp(24px, 4vw, 34px); margin: 10px 0 8px; letter-spacing: -0.01em; }
+  .lede { color: var(--muted); max-width: 70ch; margin: 0; font-size: 16px; }
+  nav.toc { display: flex; flex-wrap: wrap; gap: 8px; padding: 16px 0 4px; }
+  nav.toc a {
+    font-family: var(--mono); font-size: 11px; text-decoration: none; color: var(--muted);
+    border: 1px solid var(--line); padding: 5px 10px; border-radius: 3px;
+  }
+  nav.toc a:hover { color: var(--cyan); border-color: var(--line-strong); }
+  section { margin-top: 52px; }
+  h2 { font-size: 21px; margin: 0 0 4px; display: flex; align-items: baseline; gap: 12px; }
+  h2 .num { font-family: var(--mono); font-size: 13px; color: var(--cyan); }
+  h2 + p.sub { color: var(--muted); margin: 0 0 18px; max-width: 75ch; }
+  h3 { font-size: 15px; margin: 22px 0 8px; color: var(--text); }
+  p { max-width: 78ch; }
+  .panel {
+    background: var(--panel); border: 1px solid var(--line); border-radius: 6px;
+    padding: 18px 20px; margin: 14px 0;
+  }
+  .panel h3:first-child { margin-top: 0; }
+  code { font-family: var(--mono); font-size: 12.5px; background: var(--panel2); border: 1px solid var(--line); padding: 1px 5px; border-radius: 3px; color: var(--cyan); }
+  pre { background: var(--panel2); border: 1px solid var(--line); border-radius: 6px; padding: 14px 16px; overflow-x: auto; font-family: var(--mono); font-size: 12.5px; line-height: 1.6; }
+  pre b { color: var(--amber); font-weight: 600; }
+  pre i { color: var(--muted); font-style: normal; }
+  pre em { color: var(--green); font-style: normal; }
+  .callout { border-left: 3px solid var(--cyan); background: var(--cyan-dim); padding: 10px 14px; border-radius: 0 4px 4px 0; margin: 14px 0; font-size: 14px; }
+  .callout.warn { border-color: var(--amber); background: var(--amber-dim); }
+  .callout.bad { border-color: var(--red); background: var(--red-dim); }
+  .callout b:first-child { display: block; font-family: var(--mono); font-size: 11px; letter-spacing: .14em; text-transform: uppercase; margin-bottom: 3px; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  @media (max-width: 760px) { .grid2 { grid-template-columns: 1fr; } }
+  table { width: 100%; border-collapse: collapse; font-size: 13.5px; margin: 12px 0; }
+  th { text-align: left; font-family: var(--mono); font-size: 10.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); border-bottom: 1px solid var(--line-strong); padding: 7px 10px; }
+  td { border-bottom: 1px solid var(--line); padding: 7px 10px; vertical-align: top; }
+  tr:last-child td { border-bottom: none; }
+  .sev { font-family: var(--mono); font-size: 11px; padding: 1px 7px; border-radius: 3px; white-space: nowrap; }
+  .sev.nominal { color: var(--cyan); background: var(--cyan-dim); }
+  .sev.warning { color: var(--amber); background: var(--amber-dim); }
+  .sev.critical { color: var(--red); background: var(--red-dim); }
+  .sev.ok { color: var(--green); background: rgba(74, 222, 128, .1); }
+  figure { margin: 18px 0; }
+  figcaption { font-size: 12.5px; color: var(--muted); margin-top: 8px; max-width: 75ch; }
+  svg { display: block; width: 100%; height: auto; }
+  .svgbox { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 14px; }
+  text { font-family: var(--sans); }
+  .mono { font-family: var(--mono); }
+  .badge-row { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0; }
+  .badge { font-family: var(--mono); font-size: 11px; border: 1px solid var(--line-strong); padding: 4px 10px; border-radius: 3px; color: var(--muted); }
+  .badge.on { color: var(--cyan); border-color: var(--cyan); background: var(--cyan-dim); }
+  .toggle-demo button { cursor: pointer; }
+  footer { margin-top: 64px; border-top: 1px solid var(--line); padding-top: 16px; color: var(--muted); font-size: 12.5px; }
+  .legend { display: flex; gap: 16px; flex-wrap: wrap; font-size: 12px; color: var(--muted); margin: 6px 0 2px; }
+  .legend span::before { content: "■ "; }
+  .l-cyan::before { color: var(--cyan); } .l-amber::before { color: var(--amber); } .l-red::before { color: var(--red); } .l-green::before { color: var(--green); } .l-gray::before { color: var(--line-strong); }
+  ul.tight { margin: 8px 0; padding-left: 20px; } ul.tight li { margin: 4px 0; }
+  .timeline { position: relative; margin: 18px 0 6px; padding-left: 26px; }
+  .timeline::before { content: ""; position: absolute; left: 8px; top: 4px; bottom: 4px; width: 2px; background: var(--line-strong); }
+  .t-item { position: relative; margin-bottom: 14px; }
+  .t-item::before { content: ""; position: absolute; left: -24px; top: 5px; width: 10px; height: 10px; border-radius: 50%; background: var(--bg); border: 2px solid var(--cyan); }
+  .t-item.bad::before { border-color: var(--red); }
+  .t-item time { font-family: var(--mono); font-size: 11px; color: var(--cyan); display: block; }
+  .t-item.bad time { color: var(--red); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="hero">
+  <div class="eyebrow">VYOM · GAS418S Digital Twin · Work-Thread Review</div>
+  <h1>From Piston Numbers to a Verified Jet Twin</h1>
+  <p class="lede">This thread recalibrated the entire VYOM stack to a real 60-second flight capture of the Flygas GAS418S, then adversarially exercised the change end-to-end — finding and fixing six genuine defects. This document explains what changed, why, and shows the exact mechanisms with live, interactive diagrams.</p>
+  <nav class="toc" aria-label="Contents">
+    <a href="#s1">1 · Recalibration</a>
+    <a href="#s2">2 · Alert Hysteresis</a>
+    <a href="#s3">3 · Replay Lifecycle</a>
+    <a href="#s4">4 · API Crash Fix</a>
+    <a href="#s5">5 · Race Guards</a>
+    <a href="#s6">6 · Verification</a>
+  </nav>
+</header>
+
+<!-- ================= 1. RECALIBRATION ================= -->
+<section id="s1">
+  <h2><span class="num">01</span> Recalibrating to the sample capture</h2>
+  <p class="sub">The app's entire numeric envelope was rebuilt from <code>drdo-cruise-01.json</code> — a real 60-frame, 1 Hz recording. Every layer now derives from the same file.</p>
+
+  <figure class="svgbox">
+  <svg viewBox="0 0 1000 300" role="img" aria-label="Diagram: the sample capture flows into four layers of the app">
+    <defs>
+      <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" fill="#2c4260"/>
+      </marker>
+    </defs>
+    <!-- source -->
+    <rect x="20" y="105" width="200" height="90" rx="6" fill="#101a29" stroke="#35d6e8"/>
+    <text x="120" y="135" text-anchor="middle" fill="#d7e2ee" font-size="13" font-weight="600">Sample capture</text>
+    <text x="120" y="155" text-anchor="middle" fill="#7e93a9" font-size="11" class="mono">drdo-cruise-01.json</text>
+    <text x="120" y="174" text-anchor="middle" fill="#7e93a9" font-size="11">60 frames · 1 Hz · 60 s</text>
+
+    <path d="M220,150 L290,150" stroke="#2c4260" stroke-width="1.5" marker-end="url(#arr)"/>
+    <text x="255" y="140" text-anchor="middle" fill="#7e93a9" font-size="10">verbatim</text>
+
+    <!-- four consumers -->
+    <g font-size="12">
+      <rect x="300" y="20"  width="290" height="66" rx="6" fill="#0c1420" stroke="#1d2b3e"/>
+      <text x="316" y="45" fill="#35d6e8" font-size="11" class="mono">NOMINAL (src/lib/nominal.ts)</text>
+      <text x="316" y="66" fill="#7e93a9" font-size="11">Cruise point: 51.5 kN · 11,950 rpm · 1,080.5 K</text>
+
+      <rect x="300" y="102" width="290" height="66" rx="6" fill="#0c1420" stroke="#1d2b3e"/>
+      <text x="316" y="127" fill="#35d6e8" font-size="11" class="mono">engineCore response curves</text>
+      <text x="316" y="148" fill="#7e93a9" font-size="11">PLA slopes measured from the file: +10.4 K/% …</text>
+
+      <rect x="300" y="184" width="290" height="66" rx="6" fill="#0c1420" stroke="#1d2b3e"/>
+      <text x="316" y="209" fill="#35d6e8" font-size="11" class="mono">LIMIT_RULES (thresholds.ts)</text>
+      <text x="316" y="230" fill="#7e93a9" font-size="11">TET 1,160/1,250 K · stress 700/820 MPa · fuel 38/45</text>
+
+      <rect x="660" y="102" width="320" height="66" rx="6" fill="#0c1420" stroke="#35d6e8"/>
+      <text x="676" y="127" fill="#35d6e8" font-size="11" class="mono">/api/datasets → DATASET_REPLAY</text>
+      <text x="676" y="148" fill="#7e93a9" font-size="11">Shipped as the first replay scenario, scrubbable</text>
+    </g>
+    <path d="M590,53 L640,53 L640,118 L656,124" stroke="#2c4260" stroke-width="1.5" fill="none" marker-end="url(#arr)"/>
+    <path d="M590,135 L656,135" stroke="#2c4260" stroke-width="1.5" marker-end="url(#arr)"/>
+    <path d="M590,217 L640,217 L640,152 L656,146" stroke="#2c4260" stroke-width="1.5" fill="none" marker-end="url(#arr)"/>
+  </svg>
+  <figcaption>The capture is not just replay data — it is the calibration source. A golden test pins <code>NOMINAL</code> to the file's actual 70 %-PLA midpoints, so any future envelope drift fails CI.</figcaption>
+  </figure>
+
+  <div class="callout">
+    <b>Catch worth knowing</b>
+    The golden test found two eyeball errors in the first calibration pass: N2 was set to 12,150 rpm and TET to 1,090 K by eye, but the capture's true 70 % midpoints are <b>11,950 rpm</b> and <b>1,080.5 K</b>. Measuring beats guessing — the tests now enforce it.
+  </div>
+
+  <h3>What the numbers describe</h3>
+  <table>
+    <thead><tr><th>Channel</th><th>Capture cruise value</th><th>Old (piston-era) scale</th><th>Status</th></tr></thead>
+    <tbody>
+      <tr><td>Core thrust</td><td class="mono">~51.5 kN</td><td class="mono">~12 kN</td><td><span class="sev ok">recalibrated</span></td></tr>
+      <tr><td>N2 spool speed</td><td class="mono">11,553–12,357 rpm</td><td class="mono">~2,850 rpm crank</td><td><span class="sev ok">recalibrated</span></td></tr>
+      <tr><td>TET</td><td class="mono">1,044–1,117 K</td><td class="mono">EGT ~660 °C</td><td><span class="sev ok">recalibrated</span></td></tr>
+      <tr><td>Pressure ratio</td><td class="mono">~15.4 : 1</td><td class="mono">~8 : 1 boost</td><td><span class="sev ok">recalibrated</span></td></tr>
+      <tr><td>3D model</td><td colspan="2">Flat-four pistons → axial core: compressor stages, annular combustor, 2 turbine stages, nozzle</td><td><span class="sev ok">rebuilt</span></td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ================= 2. HYSTERESIS ================= -->
+<section id="s2">
+  <h2><span class="num">02</span> Alert flapping → hysteresis</h2>
+  <p class="sub">The most consequential defect found live: with the fault plateau sitting exactly on a limit, noise re-armed the breach every frame. Six identical alerts fired in four seconds.</p>
+
+  <div class="grid2">
+    <div class="panel">
+      <h3 style="color:var(--red)">Before — instant de-escalation</h3>
+      <p style="font-size:13.5px">Vibration hovers at the 1.2 g soft limit. Each frame below the line resets <code>limitState</code> to nominal; the next frame above fires a <em>fresh</em> warning.</p>
+      <figure class="svgbox" style="margin:10px 0 4px">
+      <svg viewBox="0 0 440 190" role="img" aria-label="Oscillating value repeatedly re-fires alerts">
+        <line x1="40" y1="60" x2="420" y2="60" stroke="#f0554f" stroke-dasharray="4 4" stroke-width="1.5"/>
+        <text x="38" y="55" fill="#f0554f" font-size="10" text-anchor="end" class="mono">1.2 g</text>
+        <polyline fill="none" stroke="#35d6e8" stroke-width="2"
+          points="40,100 60,55 80,70 100,52 120,72 140,50 160,74 180,54 200,70 220,53 240,72 260,55 280,68 300,52 320,70 340,56 360,66 380,54 400,68"/>
+        <g fill="#f0554f">
+          <circle cx="60" cy="55" r="4"/><circle cx="100" cy="52" r="4"/><circle cx="140" cy="50" r="4"/>
+          <circle cx="180" cy="54" r="4"/><circle cx="220" cy="53" r="4"/><circle cx="260" cy="55" r="4"/>
+          <circle cx="300" cy="52" r="4"/><circle cx="340" cy="56" r="4"/><circle cx="380" cy="54" r="4"/>
+        </g>
+        <text x="230" y="160" text-anchor="middle" fill="#7e93a9" font-size="11">each red dot = one fresh WARNING alert → 6 alerts / 4 s</text>
+        <line x1="40" y1="20" x2="420" y2="20" stroke="transparent"/>
+      </svg>
+      </figure>
+    </div>
+    <div class="panel">
+      <h3 style="color:var(--green)">After — hold-band hysteresis</h3>
+      <p style="font-size:13.5px">De-escalation now requires the value to clear the threshold by 10 % of the soft–hard span (here 0.13 g). Escalations always fire immediately; only step-downs are delayed.</p>
+      <figure class="svgbox" style="margin:10px 0 4px">
+      <svg viewBox="0 0 440 190" role="img" aria-label="Same oscillation now held to a single alert">
+        <line x1="40" y1="60" x2="420" y2="60" stroke="#f0554f" stroke-dasharray="4 4" stroke-width="1.5"/>
+        <rect x="40" y="60" width="380" height="26" fill="rgba(245,184,64,0.10)"/>
+        <text x="38" y="55" fill="#f0554f" font-size="10" text-anchor="end" class="mono">1.2 g</text>
+        <text x="424" y="92" fill="#f5b840" font-size="10" text-anchor="end" class="mono">hold band → 1.07 g</text>
+        <polyline fill="none" stroke="#35d6e8" stroke-width="2"
+          points="40,100 60,55 80,70 100,52 120,72 140,50 160,74 180,54 200,70 220,53 240,72 260,55 280,68 300,52 320,70 340,56 360,66 380,54 400,68"/>
+        <circle cx="60" cy="55" r="5" fill="none" stroke="#f0554f" stroke-width="2"/>
+        <circle cx="60" cy="55" r="4" fill="#f0554f"/>
+        <text x="230" y="160" text-anchor="middle" fill="#7e93a9" font-size="11">one alert; dips inside the band are held silently</text>
+      </svg>
+      </figure>
+    </div>
+  </div>
+
+  <h3>The state machine now implemented in <code>evaluateFrame</code></h3>
+  <figure class="svgbox">
+  <svg viewBox="0 0 960 240" role="img" aria-label="Alert state machine: escalation fires instantly, de-escalation requires clearing a hold band">
+    <defs>
+      <marker id="arr2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" fill="#7e93a9"/>
+      </marker>
+    </defs>
+    <g font-size="13" text-anchor="middle">
+      <rect x="30"  y="90" width="150" height="52" rx="6" fill="#0c1420" stroke="#2c4260"/>
+      <text x="105" y="112" fill="#7e93a9" class="mono" font-size="12">nominal</text>
+      <text x="105" y="130" fill="#7e93a9" font-size="10">no alert</text>
+
+      <rect x="280" y="90" width="170" height="52" rx="6" fill="#0c1420" stroke="#f5b840"/>
+      <text x="365" y="112" fill="#f5b840" class="mono" font-size="12">warning</text>
+      <text x="365" y="130" fill="#7e93a9" font-size="10">fires once on entry</text>
+
+      <rect x="560" y="90" width="170" height="52" rx="6" fill="#0c1420" stroke="#f0554f"/>
+      <text x="645" y="112" fill="#f0554f" class="mono" font-size="12">critical</text>
+      <text x="645" y="130" fill="#7e93a9" font-size="10">fires once on entry</text>
+
+      <rect x="790" y="82" width="150" height="68" rx="6" fill="#101a29" stroke="#2c4260" stroke-dasharray="5 4"/>
+      <text x="865" y="108" fill="#d7e2ee" font-size="11">hold band</text>
+      <text x="865" y="126" fill="#7e93a9" font-size="10">±10 % of soft–hard</text>
+      <text x="865" y="141" fill="#7e93a9" font-size="10">span, per rule</text>
+    </g>
+    <g stroke="#7e93a9" stroke-width="1.5" fill="none">
+      <path d="M180,108 L276,108" marker-end="url(#arr2)"/>
+      <path d="M450,108 L556,108" marker-end="url(#arr2)"/>
+      <path d="M645,86 C645,45 500,45 430,80" marker-end="url(#arr2)" stroke="#4ade80" stroke-dasharray="5 4"/>
+      <path d="M365,86 C365,55 200,55 165,84" marker-end="url(#arr2)" stroke="#4ade80" stroke-dasharray="5 4"/>
+    </g>
+    <text x="220" y="98" fill="#4ade80" font-size="10" text-anchor="middle">value &lt; soft − band</text>
+    <text x="505" y="98" fill="#4ade80" font-size="10" text-anchor="middle">value &lt; hard − band</text>
+    <text x="520" y="62" fill="#7e93a9" font-size="10">de-escalation: silent, requires clearing the hold band</text>
+    <text x="228" y="124" fill="#f5b840" font-size="10" text-anchor="middle">≥ soft</text>
+    <text x="503" y="124" fill="#f0554f" font-size="10" text-anchor="middle">≥ hard</text>
+  </svg>
+  <figcaption>Escalations (nominal→warning→critical) are instantaneous — no added latency on real breaches. Only recovery is hysteretic. A dip that never leaves the hold band keeps the previous severity, so the alert cannot re-arm.</figcaption>
+  </figure>
+
+  <pre><i>// src/lib/thresholds.ts — the whole mechanism is these five lines</i>
+<b>const</b> hyst = Math.abs(rule.hardLimit - rule.softLimit) * HYSTERESIS_FRACTION;
+<b>const</b> threshold = prev === 'critical' ? rule.hardLimit : rule.softLimit;
+<b>const</b> cleared = rule.direction === 'above'
+  ? value < threshold - hyst
+  : value > threshold + hyst;
+<b>if</b> (!cleared) <b>continue</b>;  <i>// hold previous severity silently</i></pre>
+
+  <div class="callout warn">
+    <b>Judgment call kept</b>
+    A sustained fault whose plateau genuinely oscillates ±15 K across the hard limit still re-fires roughly once a minute — that is a <em>real</em> re-crossing past the dead-band, which correct alarm semantics should report. Fully suppressing it would need per-parameter cooldown timers, deliberately left out of scope.
+  </div>
+</section>
+
+<!-- ================= 3. REPLAY LIFECYCLE ================= -->
+<section id="s3">
+  <h2><span class="num">03</span> Replay lifecycle: three broken transitions</h2>
+  <p class="sub">A dataset replay has four states — loading, playing, complete, restarted. Three of the four transitions were broken in ways a screenshot could never show; the headless lifecycle drive caught them.</p>
+
+  <figure class="svgbox">
+  <svg viewBox="0 0 960 330" role="img" aria-label="Replay state machine with the three fixed transitions highlighted">
+    <defs>
+      <marker id="arr3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" fill="#7e93a9"/>
+      </marker>
+      <marker id="arrFix" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" fill="#4ade80"/>
+      </marker>
+    </defs>
+    <g font-size="13" text-anchor="middle">
+      <rect x="40"  y="120" width="170" height="70" rx="8" fill="#0c1420" stroke="#2c4260"/>
+      <text x="125" y="150" fill="#d7e2ee">IDLE / LOADING</text>
+      <text x="125" y="170" fill="#7e93a9" font-size="10.5">picker click → fetch</text>
+
+      <rect x="330" y="120" width="170" height="70" rx="8" fill="#0c1420" stroke="#35d6e8"/>
+      <text x="415" y="150" fill="#35d6e8">PLAYING</text>
+      <text x="415" y="170" fill="#7e93a9" font-size="10.5">frames @ samplingRateHz</text>
+
+      <rect x="620" y="120" width="170" height="70" rx="8" fill="#0c1420" stroke="#2c4260"/>
+      <text x="705" y="150" fill="#d7e2ee">COMPLETE</text>
+      <text x="705" y="170" fill="#7e93a9" font-size="10.5">advisory fires once</text>
+    </g>
+    <g stroke="#7e93a9" stroke-width="1.5" fill="none">
+      <path d="M210,155 L326,155" marker-end="url(#arr3)"/>
+      <path d="M500,155 L616,155" marker-end="url(#arr3)"/>
+    </g>
+    <text x="268" y="146" fill="#7e93a9" font-size="10" text-anchor="middle">loadDataset()</text>
+    <text x="558" y="146" fill="#7e93a9" font-size="10" text-anchor="middle">index ≥ last</text>
+
+    <!-- fix 1: restart -->
+    <path d="M705,190 C705,265 500,285 420,196" stroke="#4ade80" stroke-width="2" fill="none" stroke-dasharray="6 4" marker-end="url(#arrFix)"/>
+    <text x="565" y="288" fill="#4ade80" font-size="11" text-anchor="middle">▶ pressed: resetStream + scrubTo(0) + play</text>
+    <text x="565" y="304" fill="#f0554f" font-size="10" text-anchor="middle">was: re-fired “DATASET COMPLETE” on every press, never restarted</text>
+
+    <!-- fix 2: loadDataset resets stream -->
+    <rect x="230" y="14" width="470" height="66" rx="6" fill="rgba(74,222,128,0.07)" stroke="#4ade80" stroke-dasharray="6 4"/>
+    <text x="465" y="38" fill="#4ade80" font-size="11" text-anchor="middle">FIX inside loadDataset: ring = [], limitState = {}, frame 0 pushed</text>
+    <text x="465" y="56" fill="#7e93a9" font-size="10" text-anchor="middle">was: previous capture's frames stayed in trend windows; frame 0 shown but</text>
+    <text x="465" y="70" fill="#7e93a9" font-size="10" text-anchor="middle">absent from history — silent off-by-one (ring 59/60)</text>
+    <path d="M465,80 L465,116" stroke="#4ade80" stroke-width="1.5" stroke-dasharray="5 4" marker-end="url(#arrFix)"/>
+
+    <!-- fix 3: picker race -->
+    <rect x="718" y="14" width="224" height="66" rx="6" fill="rgba(74,222,128,0.07)" stroke="#4ade80" stroke-dasharray="6 4"/>
+    <text x="830" y="38" fill="#4ade80" font-size="11" text-anchor="middle">FIX: requestSeq guard</text>
+    <text x="830" y="56" fill="#7e93a9" font-size="10" text-anchor="middle">last click wins;</text>
+    <text x="830" y="70" fill="#7e93a9" font-size="10" text-anchor="middle">stale fetch discarded</text>
+    <path d="M830,80 L830,110 C830,122 805,128 790,132" stroke="#4ade80" stroke-width="1.5" fill="none" stroke-dasharray="5 4" marker-end="url(#arrFix)"/>
+  </svg>
+  <figcaption>Green paths are the fixes. The most subtle: <code>loadDataset</code> armed frame&nbsp;0 on the gauge without pushing it into the ring, so the trend charts started at frame&nbsp;1 — a silent off-by-one (59 vs 60 samples) that the lifecycle script's ring assertion exposed.</figcaption>
+  </figure>
+
+  <h3>Verified live, not just in tests</h3>
+  <div class="timeline">
+    <div class="t-item"><time>live probe 1</time>Replay driven to 00:59/01:00 → exactly <b>1</b> "DATASET COMPLETE" advisory.</div>
+    <div class="t-item"><time>live probe 2</time>▶ pressed at end → restarts from frame 0, still exactly 1 completion event (old code: 2+ per press).</div>
+    <div class="t-item"><time>live probe 3</time>M-02 clicked, then M-03 immediately → only M-03's "DATASET LOADED" fires; picker and header both track M-03. The stale M-02 response is discarded.</div>
+  </div>
+</section>
+
+<!-- ================= 4. API CRASH ================= -->
+<section id="s4">
+  <h2><span class="num">04</span> One malformed request killed the whole API</h2>
+  <p class="sub">The sharpest finding: the server died mid-verification. A POST with bare telemetry objects (missing the <code>{ts, telemetry}</code> wrapper) threw a TypeError that Express 4 never forwarded.</p>
+
+  <figure class="svgbox">
+  <svg viewBox="0 0 960 250" role="img" aria-label="Failure chain: malformed request to dead server, and the two-layer fix">
+    <defs>
+      <marker id="arrR" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" fill="#f0554f"/>
+      </marker>
+      <marker id="arrG" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" fill="#4ade80"/>
+      </marker>
+    </defs>
+    <!-- before row -->
+    <text x="24" y="30" fill="#f0554f" font-size="11" class="mono">BEFORE</text>
+    <g font-size="12" text-anchor="middle">
+      <rect x="24" y="44" width="180" height="56" rx="6" fill="#0c1420" stroke="#2c4260"/>
+      <text x="114" y="68" fill="#d7e2ee" font-size="11.5">malformed POST</text>
+      <text x="114" y="86" fill="#7e93a9" font-size="10.5" class="mono">{window:[{tet:…}]}</text>
+
+      <rect x="300" y="44" width="230" height="56" rx="6" fill="#0c1420" stroke="#f0554f"/>
+      <text x="415" y="68" fill="#f0554f" font-size="11.5">TypeError in async handler</text>
+      <text x="415" y="86" fill="#7e93a9" font-size="10.5">w.telemetry[key] → undefined[key]</text>
+
+      <rect x="626" y="44" width="310" height="56" rx="6" fill="rgba(240,85,79,0.1)" stroke="#f0554f"/>
+      <text x="781" y="68" fill="#f0554f" font-size="11.5">unhandled rejection → process exits</text>
+      <text x="781" y="86" fill="#7e93a9" font-size="10.5">every client loses the API — port 3001 dead</text>
+    </g>
+    <path d="M204,72 L296,72" stroke="#f0554f" stroke-width="1.5" marker-end="url(#arrR)"/>
+    <path d="M530,72 L622,72" stroke="#f0554f" stroke-width="1.5" marker-end="url(#arrR)"/>
+
+    <!-- after row -->
+    <text x="24" y="150" fill="#4ade80" font-size="11" class="mono">AFTER</text>
+    <g font-size="12" text-anchor="middle">
+      <rect x="24" y="164" width="180" height="56" rx="6" fill="#0c1420" stroke="#2c4260"/>
+      <text x="114" y="188" fill="#d7e2ee" font-size="11.5">any malformed POST</text>
+      <text x="114" y="206" fill="#7e93a9" font-size="10.5">missing ts / telemetry / body</text>
+
+      <rect x="300" y="164" width="230" height="56" rx="6" fill="#0c1420" stroke="#4ade80"/>
+      <text x="415" y="188" fill="#4ade80" font-size="11.5">validateDiagnoseInput()</text>
+      <text x="415" y="206" fill="#7e93a9" font-size="10.5" class="mono">400 window[i] must be {ts, telemetry}</text>
+
+      <rect x="626" y="164" width="310" height="56" rx="6" fill="#0c1420" stroke="#4ade80"/>
+      <text x="781" y="188" fill="#4ade80" font-size="11.5">server survives any builder throw</text>
+      <text x="781" y="206" fill="#7e93a9" font-size="10.5">outer catch → 500 JSON, process healthy</text>
+    </g>
+    <path d="M204,192 L296,192" stroke="#4ade80" stroke-width="1.5" marker-end="url(#arrG)"/>
+    <path d="M530,192 L622,192" stroke="#4ade80" stroke-width="1.5" marker-end="url(#arrG)"/>
+    <text x="480" y="244" fill="#7e93a9" font-size="10.5" text-anchor="middle">Why two layers? Validation only covers known shapes; the catch-all covers unknown throws inside the Gemini/mock report builders.</text>
+  </svg>
+  </figure>
+
+  <div class="callout bad">
+    <b>Root cause, precisely</b>
+    Express 4 does not forward rejected promises from async handlers, and no error middleware was mounted. Node ≥ 15 terminates on unhandled rejections. Observed live: <code>/api/datasets</code> answered 200, the next POST returned empty, then <code>netstat</code> showed <b>nothing listening</b> on 3001. Re-tested after the fix: malformed → <b>400</b>, server alive; valid healthy window → report; faulted window → CRITICAL with “Turbine inlet over-temperature” and halved RUL.
+  </div>
+</section>
+
+<!-- ================= 5. RACE GUARDS ================= -->
+<section id="s5">
+  <h2><span class="num">05</span> Same bug class, two more hiding places</h2>
+  <p class="sub">Once the picker race was fixed, re-reading the codebase for the same pattern found two more unguarded async paths — plus a millisecond collision in the alert effects.</p>
+
+  <div class="panel">
+    <h3>A · Diagnostics overlap race</h3>
+    <p style="font-size:13.5px">The 3-second tick could fire fetch N+1 while fetch N was still in flight. If N+1 (fast) resolved before N (slow), the <em>stale</em> report overwrote the fresh one — silently showing 6-second-old analysis as current.</p>
+    <pre><i>// src/features/diagnostics/useDiagnostics.ts</i>
+<b>let</b> inFlight = <b>false</b>;
+<b>const</b> tick = <b>async</b> () => {
+  raiseDeterministicPrecursors();   <i>// run every tick — never gated</i>
+  runOnDeviceModel();               <i>// on-device AI is local, no race</i>
+  <b>if</b> (inFlight) <b>return</b>;            <i>// skip this tick's fetch only</i>
+  inFlight = <b>true</b>;
+  <b>try</b> { <i>/* POST /api/diagnose */</i> } <b>finally</b> { inFlight = <b>false</b>; }
+};</pre>
+    <p style="font-size:13.5px">Design choice: <b>skip rather than cancel</b>. Skipping keeps ordering trivially correct (no newest-wins bookkeeping) and at 3 s cadence loses nothing — the skipped tick's data is fresher than the in-flight request's anyway.</p>
+  </div>
+
+  <div class="panel">
+    <h3>B · Same-millisecond flash collision</h3>
+    <p style="font-size:13.5px">One <code>evaluateFrame</code> batch can produce two criticals (TET <em>and</em> blade stress in the same frame). Both called <code>flashVignette()</code>, which used <code>Date.now()</code> as its React key — identical in the same millisecond → duplicate-key warning, silently dropped or doubled overlay elements. Fixed with a module-level monotonic counter:</p>
+    <pre><b>let</b> flashSeq = 0;  <i>// module scope — unique across the session</i>
+flashVignette: () => set({ vignette: { id: ++flashSeq, ts: Date.now() } }),</pre>
+  </div>
+
+  <h3>Full data flow, with every guard marked</h3>
+  <figure class="svgbox">
+  <svg viewBox="0 0 960 380" role="img" aria-label="Architecture map of the telemetry pipeline with all guards from this thread marked">
+    <defs>
+      <marker id="arrA" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" fill="#2c4260"/>
+      </marker>
+    </defs>
+    <g font-size="11.5">
+      <!-- column 1: sources -->
+      <rect x="20" y="40" width="200" height="90" rx="6" fill="#0c1420" stroke="#1d2b3e"/>
+      <text x="36" y="64" fill="#35d6e8" class="mono" font-size="10.5">LIVE_SIM</text>
+      <text x="36" y="82" fill="#7e93a9">procedural generator</text>
+      <text x="36" y="98" fill="#7e93a9">fault classes, 10 Hz</text>
+      <rect x="20" y="150" width="200" height="70" rx="6" fill="#0c1420" stroke="#1d2b3e"/>
+      <text x="36" y="174" fill="#35d6e8" class="mono" font-size="10.5">DATASET_REPLAY</text>
+      <text x="36" y="192" fill="#7e93a9">/api/datasets/:id</text>
+      <text x="36" y="208" fill="#7e93a9">scrubbable frames</text>
+
+      <!-- column 2: store -->
+      <rect x="300" y="70" width="215" height="130" rx="6" fill="#101a29" stroke="#35d6e8"/>
+      <text x="316" y="94" fill="#35d6e8" class="mono" font-size="10.5">telemetryStore</text>
+      <text x="316" y="114" fill="#7e93a9">ring buffer (600 @ 10 Hz)</text>
+      <text x="316" y="132" fill="#7e93a9">limitState + replayIndex</text>
+      <text x="316" y="156" fill="#4ade80" font-size="10">✓ loadDataset resets stream</text>
+      <text x="316" y="172" fill="#4ade80" font-size="10">✓ restart path shares reset</text>
+
+      <!-- column 3: threshold -->
+      <rect x="595" y="60" width="175" height="80" rx="6" fill="#0c1420" stroke="#f5b840"/>
+      <text x="611" y="84" fill="#f5b840" class="mono" font-size="10.5">evaluateFrame</text>
+      <text x="611" y="102" fill="#7e93a9">deterministic limits</text>
+      <text x="611" y="118" fill="#4ade80" font-size="10">✓ hysteresis hold-band</text>
+      <text x="611" y="132" fill="#7e93a9" font-size="10">zero latency, no AI</text>
+
+      <!-- column 3 lower: alerts -->
+      <rect x="595" y="200" width="175" height="120" rx="6" fill="#0c1420" stroke="#1d2b3e"/>
+      <text x="611" y="224" fill="#d7e2ee" class="mono" font-size="10.5">alertStore + UI</text>
+      <text x="611" y="244" fill="#7e93a9">toasts · vignette · banner</text>
+      <text x="611" y="262" fill="#7e93a9">shake · vibration ladder</text>
+      <text x="611" y="288" fill="#4ade80" font-size="10">✓ monotonic flash ids</text>
+      <text x="611" y="304" fill="#4ade80" font-size="10">✓ overflow-x: clip</text>
+
+      <!-- column 4: server -->
+      <rect x="810" y="120" width="130" height="150" rx="6" fill="#0c1420" stroke="#1d2b3e"/>
+      <text x="826" y="144" fill="#d7e2ee" class="mono" font-size="10.5">/api/diagnose</text>
+      <text x="826" y="164" fill="#7e93a9" font-size="10.5">Gemini + fallback</text>
+      <text x="826" y="190" fill="#4ade80" font-size="10">✓ input validation</text>
+      <text x="826" y="206" fill="#4ade80" font-size="10">✓ catch-all 500</text>
+      <text x="826" y="232" fill="#7e93a9" font-size="10">client gate:</text>
+      <text x="826" y="248" fill="#4ade80" font-size="10">✓ inFlight skip</text>
+
+      <!-- arrows -->
+      <g stroke="#2c4260" stroke-width="1.5" fill="none">
+        <path d="M220,85 L296,110" marker-end="url(#arrA)"/>
+        <path d="M220,185 L296,165" marker-end="url(#arrA)"/>
+        <path d="M515,110 L591,100" marker-end="url(#arrA)"/>
+        <path d="M770,110 C800,105 830,115 845,150" marker-end="url(#arrA)"/>
+        <path d="M770,230 C800,240 810,230 830,230" stroke-dasharray="4 4"/>
+        <path d="M682,200 L682,148" marker-end="url(#arrA)"/>
+      </g>
+      <text x="790" y="98" fill="#7e93a9" font-size="9.5">sampleWindow(90)</text>
+      <text x="640" y="180" fill="#7e93a9" font-size="9.5">escalation →</text>
+    </g>
+    <text x="480" y="360" fill="#7e93a9" font-size="10.5" text-anchor="middle">Every green check is a fix from this thread. The dashed return path (report → alerts) is the one now gated against stale overwrites.</text>
+  </svg>
+  </figure>
+</section>
+
+<!-- ================= 6. VERIFICATION ================= -->
+<section id="s6">
+  <h2><span class="num">06</span> How it was verified</h2>
+  <p class="sub">Three independent layers, because each catches defects the others cannot.</p>
+
+  <table>
+    <thead><tr><th>Layer</th><th>What it drives</th><th>Defects only it could catch</th><th>Result</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><b>Headless lifecycle script</b><br><span class="mono" style="font-size:11px;color:var(--muted)">scripts/verify-lifecycle.ts</span></td>
+        <td>Real Zustand stores, simulator, threshold engine — no DOM, no React</td>
+        <td>Ring off-by-one (59/60), restart re-firing completion, limitState persistence across dataset switches</td>
+        <td><span class="sev ok">23 / 23</span></td>
+      </tr>
+      <tr>
+        <td><b>Unit + golden tests</b><br><span class="mono" style="font-size:11px;color:var(--muted)">vitest · 4 files</span></td>
+        <td>Threshold ladder, hysteresis oscillation, dataset calibration vs the capture file, gauge domains</td>
+        <td>NOMINAL eyeball errors (N2, TET), M-02 crossing into critical contrary to its mission log, float-noise messages</td>
+        <td><span class="sev ok">36 / 36</span></td>
+      </tr>
+      <tr>
+        <td><b>Live preview + HTTP</b><br><span class="mono" style="font-size:11px;color:var(--muted)">preview_evaluate · curl</span></td>
+        <td>The running app: fault injection, alert feed contents, API process survival, console errors</td>
+        <td>Alert flapping (6/4 s), server death on malformed POST, duplicate React keys, 500s</td>
+        <td><span class="sev ok">clean</span></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>What a fault injection triggers, end to end</h3>
+  <div class="badge-row" id="ladder" role="group" aria-label="Interactive alert ladder demo">
+    <button class="badge" data-f="nominal">NOMINAL</button>
+    <button class="badge" data-f="caution">CAUTION</button>
+    <button class="badge" data-f="warning">WARNING</button>
+    <button class="badge on" data-f="critical">CRITICAL</button>
+  </div>
+  <div class="panel" id="ladderOut" style="min-height:118px" aria-live="polite">
+    <p class="mono" style="font-size:12px;color:var(--cyan);margin:0 0 8px">CRITICAL — full ladder</p>
+    <ul class="tight" style="font-size:13.5px">
+      <li>Red <b>vignette flash</b> + top alert banner (always — primary channel)</li>
+      <li>Screen shake ~4 px, 300 ms × 2 cycles (skipped if <code>prefers-reduced-motion</code> or intensity ≠ FULL)</li>
+      <li><code>navigator.vibrate([100,50,100,50,200])</code> — bonus on Android Chrome only</li>
+      <li>Toast + mission log entry; alert feed shows the single hysteresis-gated breach</li>
+    </ul>
+  </div>
+
+  <h3>Final gate</h3>
+  <p class="mono" style="font-size:13px;color:var(--green)">tsc -b clean · 36/36 unit · 23/23 lifecycle · vite build ✓ · /api/diagnose 200s · console clean</p>
+
+  <div class="callout warn">
+    <b>Known non-defects (deliberately not touched)</b>
+    <ul class="tight">
+      <li><code>deliveryController</code>'s processed-alert Set never prunes — a few hundred strings per session; an LRU would be premature.</li>
+      <li>React Router v7 future-flag warnings — opting in early is a project-wide decision, not a cleanup.</li>
+      <li>Genuine re-crossings past the hold band still re-fire (~1/min on a plateau fault) — correct semantics; a cooldown would be a product decision.</li>
+    </ul>
+  </div>
+</section>
+
+<footer>
+  VYOM work-thread explanation · generated from the actual diff and live verification runs · no product code was modified to build this page.
+</footer>
+
+</div>
+
+<script>
+(function () {
+  var out = document.getElementById('ladderOut');
+  var content = {
+    nominal: ['NOMINAL — clean cruise', [
+      'Cyan telemetry, no alerts, health index stable at capture value',
+      'On-device classifier reads Normal at 99%+ (baseline-relative index features)',
+      'No motion, no haptics — the calm state must look calm'
+    ]],
+    caution: ['CAUTION — first hint', [
+      'Amber highlight on the specific gauge + toast (no panel-wide alarm)',
+      'No vibration, no shake — response scales with severity',
+      'Often raised by the predictive layer before any limit is crossed'
+    ]],
+    warning: ['WARNING — soft limit', [
+      'Amber pulse on the panel + toast + navigator.vibrate(200)',
+      'Fires once on escalation; hysteresis holds it while noise straddles the limit',
+      'Vibration API is Android-Chrome-only — color/toast remain the primary cue'
+    ]],
+    critical: ['CRITICAL — hard limit', [
+      'Red vignette flash + top alert banner (always — primary channel)',
+      'Screen shake ~4 px, 300 ms × 2 cycles (skipped if prefers-reduced-motion or intensity ≠ FULL)',
+      'navigator.vibrate([100,50,100,50,200]) — bonus on supported devices',
+      'Toast + mission log entry; alert feed shows the single hysteresis-gated breach'
+    ]]
+  };
+  var buttons = document.querySelectorAll('#ladder button');
+  buttons.forEach(function (b) {
+    b.addEventListener('click', function () {
+      buttons.forEach(function (x) { x.classList.remove('on'); });
+      b.classList.add('on');
+      var f = b.getAttribute('data-f');
+      var c = content[f];
+      out.innerHTML = '<p class="mono" style="font-size:12px;margin:0 0 8px;color:' +
+        (f === 'critical' ? 'var(--red)' : f === 'warning' ? 'var(--amber)' : f === 'caution' ? 'var(--amber)' : 'var(--cyan)') +
+        '">' + c[0] + '</p><ul class="tight" style="font-size:13.5px">' +
+        c[1].map(function (li) { return '<li>' + li + '</li>'; }).join('') + '</ul>';
+    });
+  });
+})();
+</script>
+</body>
+</html>

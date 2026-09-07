@@ -1,0 +1,337 @@
+@import "tailwindcss";
+
+@theme {
+  --font-display: "Rajdhani", "Arial Narrow", "Helvetica Neue", sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+/* ------------------------------------------------------------------ */
+/* Semantic tokens — same severity system, different base luminance    */
+/* ------------------------------------------------------------------ */
+:root {
+  --bg: #020409;
+  --bg-deep: #010307;
+  --panel: #070c12;
+  --panel-2: #0a1118;
+  --panel-3: #0d1620;
+  --line: rgba(125, 211, 252, 0.14);
+  --line-strong: rgba(34, 211, 238, 0.5);
+  --text: #d8e4ea;
+  --muted: #70818c;
+  --accent: #22d3ee;
+  --accent-soft: rgba(34, 211, 238, 0.1);
+  --nominal: #2dd4bf;
+  --caution: #fbbf24;
+  --warning: #f59e0b;
+  --critical: #ef4444;
+  --good: #2dd4bf;
+  --monitor: #fbbf24;
+  --action: #ef4444;
+  --grid: rgba(34, 211, 238, 0.06);
+}
+
+.light {
+  --bg: #e9eef2;
+  --bg-deep: #dfe6ec;
+  --panel: #f7fafc;
+  --panel-2: #eef3f7;
+  --panel-3: #e4ecf1;
+  --line: rgba(12, 74, 110, 0.22);
+  --line-strong: rgba(8, 145, 178, 0.6);
+  --text: #0e1c26;
+  --muted: #51687a;
+  --accent: #0e7490;
+  --accent-soft: rgba(14, 116, 144, 0.12);
+  --nominal: #0f766e;
+  --caution: #b45309;
+  --warning: #c2410c;
+  --critical: #dc2626;
+  --good: #0f766e;
+  --monitor: #b45309;
+  --action: #dc2626;
+  --grid: rgba(14, 116, 144, 0.08);
+}
+
+/* ------------------------------------------------------------------ */
+/* Base                                                               */
+/* ------------------------------------------------------------------ */
+html,
+body,
+#root {
+  height: 100%;
+}
+
+/* Transient overflow (alert screen-shake, toasts) must never resize layout:
+   clip horizontal overflow without creating a scroll container. */
+html,
+body {
+  overflow-x: clip;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-display);
+  font-size: 14px;
+  -webkit-font-smoothing: antialiased;
+}
+
+.num {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+
+.eyebrow {
+  font-family: var(--font-display);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+/* text / fill helpers */
+.text-muted { color: var(--muted); }
+.text-accent { color: var(--accent); }
+.text-nominal { color: var(--nominal); }
+.text-caution { color: var(--caution); }
+.text-warning { color: var(--warning); }
+.text-critical { color: var(--critical); }
+.bg-accent-soft { background-color: var(--accent-soft); }
+
+/* hairlines */
+.bd { border: 1px solid var(--line); }
+.bd-t { border-top: 1px solid var(--line); }
+.bd-b { border-bottom: 1px solid var(--line); }
+.bd-l { border-left: 1px solid var(--line); }
+.bd-r { border-right: 1px solid var(--line); }
+
+/* surfaces */
+.surface { background: var(--panel); border: 1px solid var(--line); }
+.surface-2 { background: var(--panel-2); border: 1px solid var(--line); }
+
+/* beveled clipped panel — outer div carries the hairline via 1px padding */
+.bevel {
+  clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px));
+}
+.bevel-in {
+  clip-path: polygon(0 0, calc(100% - 11px) 0, 100% 11px, 100% 100%, 11px 100%, 0 calc(100% - 11px));
+}
+
+/* ------------------------------------------------------------------ */
+/* Cyberpunk HUD layer — corner brackets, glow, scanlines, reticle     */
+/* ------------------------------------------------------------------ */
+
+/* Panel with targeting-corner brackets on all four corners */
+.hud-panel {
+  position: relative;
+  border: 1px solid var(--line);
+  background:
+    linear-gradient(180deg, rgba(34, 211, 238, 0.05), transparent 30%),
+    var(--panel);
+}
+.hud-panel::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  pointer-events: none;
+  background:
+    linear-gradient(var(--accent), var(--accent)) left top / 16px 2px,
+    linear-gradient(var(--accent), var(--accent)) left top / 2px 16px,
+    linear-gradient(var(--accent), var(--accent)) right top / 16px 2px,
+    linear-gradient(var(--accent), var(--accent)) right top / 2px 16px,
+    linear-gradient(var(--accent), var(--accent)) left bottom / 16px 2px,
+    linear-gradient(var(--accent), var(--accent)) left bottom / 2px 16px,
+    linear-gradient(var(--accent), var(--accent)) right bottom / 16px 2px,
+    linear-gradient(var(--accent), var(--accent)) right bottom / 2px 16px;
+  background-repeat: no-repeat;
+  opacity: 0.6;
+}
+
+/* neon glow for accent readouts */
+.glow-accent {
+  text-shadow:
+    0 0 12px rgba(34, 211, 238, 0.55),
+    0 0 2px rgba(34, 211, 238, 0.9);
+}
+.glow-soft {
+  text-shadow: 0 0 8px currentColor;
+}
+
+/* fixed HUD frame — corner brackets at the viewport edges */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  pointer-events: none;
+  background:
+    linear-gradient(var(--accent), var(--accent)) 14px 14px / 30px 2px,
+    linear-gradient(var(--accent), var(--accent)) 14px 14px / 2px 30px,
+    linear-gradient(var(--accent), var(--accent)) calc(100% - 14px) 14px / 30px 2px,
+    linear-gradient(var(--accent), var(--accent)) calc(100% - 14px) 14px / 2px 30px,
+    linear-gradient(var(--accent), var(--accent)) 14px calc(100% - 14px) / 30px 2px,
+    linear-gradient(var(--accent), var(--accent)) 14px calc(100% - 14px) / 2px 30px,
+    linear-gradient(var(--accent), var(--accent)) calc(100% - 14px) calc(100% - 14px) / 30px 2px,
+    linear-gradient(var(--accent), var(--accent)) calc(100% - 14px) calc(100% - 14px) / 2px 30px;
+  background-repeat: no-repeat;
+  opacity: 0.45;
+}
+
+/* scanline overlay */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  pointer-events: none;
+  background: repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.35) 0 1px, transparent 1px 4px);
+  opacity: 0.14;
+}
+.light body::after {
+  background: repeating-linear-gradient(0deg, rgba(14, 116, 144, 0.25) 0 1px, transparent 1px 4px);
+  opacity: 0.06;
+}
+
+/* viewer reticle — concentric rings behind the 3D scene */
+.hud-reticle {
+  position: relative;
+  width: min(62%, 540px);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  border: 1px solid var(--line);
+  opacity: 0.55;
+}
+.hud-reticle::before {
+  content: '';
+  position: absolute;
+  inset: -7%;
+  border-radius: 50%;
+  border: 1px dashed var(--line-strong);
+  opacity: 0.5;
+  animation: reticle-spin 48s linear infinite;
+}
+.hud-reticle::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 10px;
+  height: 10px;
+  margin: -5px 0 0 -5px;
+  border: 1px solid var(--accent);
+  transform: rotate(45deg);
+  opacity: 0.8;
+}
+@keyframes reticle-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* header: hairline + neon edge glow along the bottom */
+.app-header {
+  border-bottom: 1px solid var(--line);
+}
+.app-header::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--accent) 18%, var(--accent) 82%, transparent);
+  opacity: 0.35;
+  pointer-events: none;
+}
+
+/* chamfered angular chip (cyberpunk control) */
+.hud-chip {
+  clip-path: polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px);
+}
+
+/* subtle engineering grid */
+.grid-bg {
+  background-image:
+    linear-gradient(var(--grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size: 36px 36px;
+}
+
+/* focus & selection */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+::selection {
+  background: var(--accent-soft);
+  color: var(--text);
+}
+
+/* scrollbars */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--line-strong) transparent;
+}
+*::-webkit-scrollbar { width: 8px; height: 8px; }
+*::-webkit-scrollbar-thumb { background: var(--line-strong); }
+*::-webkit-scrollbar-track { background: transparent; }
+
+/* ------------------------------------------------------------------ */
+/* Alert motion — always paired with a non-motion cue (color/icon)     */
+/* ------------------------------------------------------------------ */
+@keyframes pulse-amber {
+  0%, 100% { box-shadow: inset 0 0 0 0 rgba(245, 158, 11, 0); }
+  50% { box-shadow: inset 0 0 0 1px rgba(245, 158, 11, 0.85), inset 0 0 22px rgba(245, 158, 11, 0.22); }
+}
+.pulse-amber { animation: pulse-amber 1.2s ease-in-out 2; }
+
+/* swiper item: snap-start, fixed width children */
+.swiper-item { scroll-snap-align: start; flex: 0 0 auto; }
+
+/* hide scrollbars for horizontal strips */
+.no-scrollbar { scrollbar-width: none; }
+.no-scrollbar::-webkit-scrollbar { display: none; }
+
+@keyframes vignette-flash {
+  0% { opacity: 0; }
+  10% { opacity: 1; }
+  55% { opacity: 0.5; }
+  100% { opacity: 0; }
+}
+.vignette-flash { animation: vignette-flash 0.9s ease-out forwards; }
+
+@keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+.blink { animation: blink 1s steps(1) infinite; }
+
+@keyframes packet-travel {
+  0% { transform: translateX(0); opacity: 0; }
+  8% { opacity: 1; }
+  92% { opacity: 1; }
+  100% { transform: translateX(calc(100% + 56px)); opacity: 0; }
+}
+.packet { animation: packet-travel 2.4s linear infinite; }
+
+@keyframes hud-flicker {
+  0%, 100% { opacity: 1; }
+  92% { opacity: 1; }
+  93% { opacity: 0.65; }
+  94% { opacity: 1; }
+  97% { opacity: 0.8; }
+  98% { opacity: 1; }
+}
+.hud-flicker { animation: hud-flicker 6s linear infinite; }
+
+/* ------------------------------------------------------------------ */
+/* Reduced motion — motion and haptics are dropped; color remains      */
+/* ------------------------------------------------------------------ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

@@ -1,0 +1,415 @@
+                                      Designers and Engine Builders for U.A.V.
+                                                    www.flygas.info
+
+                         ENGINEERING
+
+Engine "GAS418S" specifications
+
+        Horizontal/Vertical Axis Installation
+
+High specific power UAV engine 180Hp with only 78Kg weight
+                  for middle to high altitude applications
+
+FLYGAS - Bologna, Italy                +39 051 807202  info@flygas.info         Pag. 1
+                                      Designers and Engine Builders for U.A.V.
+                                                    www.flygas.info
+
+                         ENGINEERING
+
+                                      KEY FEATURES
+
+· Two engine versions are available to meet the widest range of installation
+    requirements. Both horizontal and vertical axis installation are possible.
+
+· The GAS418S has a very compact size. It is thus possible to fit it into very small
+    fuselages, helping to keep the overall weight low. Specific power is very high, going
+    up to 2.31 hp/kg in the horizontal version. Peak power at sea level is 180hp
+    @5800RPM.
+
+· The GAS418S relies on a single stage centrifugal supercharger to increase its
+    performance at high altitude. This supercharger is driven mechanically rather than
+    by an exhaust gas turbine.
+
+           o The exhaust gases can thus exit the engine effortlessly, reducing exhaust and
+               combustion chamber temperatures with considerable benefits on the life of
+               the engine.
+
+           o Medium-high altitude performance of the mechanical supercharger are better
+               than the turbocharger ones. The lower air density modifies the expansion
+               ratio of the turbine, limiting the overall boosting capability due to
+               anticipated turbine over speed.
+
+· Fuel injection and ignition are completely electronic and ECU controlled, making the
+    engine run at its best under a wide range of ambient conditions.
+
+· All employed parts are manufactured in Italy, or in countries of the European Union.
+    The engine is completely designed and assembled in house at Flygas, based in Emilia
+    Romagna, Italy, (the world "Motor Valley").
+
+· GAS418S engine runs with the standard 98 octane number automotive gasoline.
+
+FLYGAS - Bologna, Italy                +39 051 807202  info@flygas.info         Pag. 2
+                                      Designers and Engine Builders for U.A.V.
+                                                    www.flygas.info
+
+                         ENGINEERING
+
+TECHNICAL SPECIFICATIONS
+
+Engine Model                                   "GAS418S", 4 stroke, Otto cycle
+Displacement:                                  1.8 Litres
+Layout                                         4 cylinders, boxer layout
+Bore \ Stroke                                  92 mm \ 68 mm
+Rotation                                       Clockwise, looking the engine from the
+                                               propeller flange
+Maximum power                                  132kW (180hp) @ 5.800 RPM, sea level
+Full throttle maximum time                     5 min
+Maximum torque                                 218 Nm @ 5.800 RPM, sea level
+Maximum continuous power                       97kW (130hp) @ 5.000 RPM
+Supercharger                                   Single stage centrifugal supercharger, with
+                                               mechanical drive
+Ignition                                       Double spark-plug, electronic ECU
+                                               controlled ignition
+Throttle control                               Mechanical (electronic throttle on request)
+Valve train                                    OHV, two valve per cylinder, in-block cam-
+                                               shaft
+Cooling                                        Water cooled, forced circulation, closed
+                                               circuit
+Lubrication                                    Dry sump (vertical version)
+                                               Wet sump (horizontal version)
+Oil quantity                                   Max. 5.5 Litres
+Alternator                                     14 V DC, 32 A (secondary alternator can be
+                                               installed)
+Fuel management system                         Electronic Fuel Injection
+Fuel consumptions                              39 lt/h @ maximum power, sea level
+                                               19 lt/h @ 4800rpm, 80 kW sea level
+Starting                                       Electric engine starter with sprag-clutch 12
+                                               V, 0,8 kW
+Fuel type                                      98 octane number automotive gasoline
+Reduction gear propeller                       Mechanical gearbox with shock absorber,
+                                               three options: 2.18: 1 - 2.20:1 - 2.33:1
+Power to weight ratio                          2.31 hp/kg (horizontal version)
+                                               2.12 hp/kg (vertical version)
+Dry Weight                                     78 Kg (horizontal version)
+                                               85kg (vertical version)
+TBO                                            WEIGHT INCLUDES ALL PARTS INSTALLED
+                                               ON THE ENGINE AS STANDARD
+                                               1200 hrs
+
+                            Table 1 - GAS418S Specifications
+
+FLYGAS - Bologna, Italy                +39 051 807202  info@flygas.info         Pag. 3
+                                      Designers and Engine Builders for U.A.V.
+                                                    www.flygas.info
+
+                         ENGINEERING
+
+· Engine overall dimensions (in millimetres) are specified in Figure 1 and Figure 2.
+
+Figure 1 - GAS418S HORIZONTAL version overall dimensions
+
+Figure 2 - GAS418S VERTICAL version overall dimensions
+
+FLYGAS - Bologna, Italy                +39 051 807202  info@flygas.info         Pag. 4
+                                      Designers and Engine Builders for U.A.V.
+                                                    www.flygas.info
+
+                         ENGINEERING
+
+                         Figure 3 - GAS418S power curve
+
+FLYGAS - Bologna, Italy  Figure 4 - GAS418S torque curve                        Pag. 5
+                                           +39 051 807202  info@flygas.info
+                                      Designers and Engine Builders for U.A.V.
+                                                    www.flygas.info
+
+                         ENGINEERING
+
+                         Figure 5 - GAS418S fuel consumption
+
+· Engine data in Figure 3, Figure 4 and
+
+· Figure 5 are obtained with air parameters specified in Table 2. These specification
+    curves are valid for both installation axes.
+
+Temperature                                  16.5°C
+Pressure
+Relative Humidity                            1011mbar
+
+                                             40%
+
+                         Table 2 - Dyno room air parameters
+
+FLYGAS - Bologna, Italy                +39 051 807202  info@flygas.info         Pag. 6
+                                      Designers and Engine Builders for U.A.V.
+                                                    www.flygas.info
+
+                         ENGINEERING
+
+                                                        Figure 6 - Propeller flange
+
+· Figure 6 shows the standard drilling work on the propeller flange. A shaft
+    extension or adaptor can also be fitted, but its length cannot be higher than
+    120mm
+
+· The engine is provided with 10 frame attachment points, highlighted in Errore.
+    L'origine riferimento non è stata trovata. and Errore. L'origine riferimento non è
+    stata trovata..
+
+FLYGAS - Bologna, Italy                +39 051 807202  info@flygas.info         Pag. 7
+                                      Designers and Engine Builders for U.A.V.
+                                                    www.flygas.info
+
+                         ENGINEERING
+
+                         ENGINE MANAGEMENT
+
+                                                                 Figure 7 - ECU wiring
+
+The engine is controlled by an EFI Technology Euro 2 ECU. The ECU input signals are:
+             · Crankshaft rotational speed and angular position
+             · Intake manifold air pressure (MAP)
+             · Lambda probe signal
+             · Intake manifold air temperature
+             · Throttle position
+             · Coil test switch signal
+
+Consequently, a suitable set of engine sensors is needed. A simplified connection scheme
+is shown in Figure 8.
+
+ECU communication protocol is CAN bus 2.0B.
+
+FLYGAS - Bologna, Italy                +39 051 807202  info@flygas.info         Pag. 8
+                                      Designers and Engine Builders for U.A.V.
+                                                    www.flygas.info
+
+                         ENGINEERING
+
+                         Figure 8 - ECU signals scheme
+
+FLYGAS - Bologna, Italy  Figure 9 - Engine cable harness                        Pag. 9
+                                          +39 051 807202  info@flygas.info
+                                        Designers and Engine Builders for U.A.V.
+                                                      www.flygas.info
+
+                         ENGINEERING
+
+· All signals are delivered through the engine cable harness displayed in Figure 9.
+    The wiring scheme is described in Figure 7. All cables are marked with a yellow
+    label, as shown in Table 3.
+
+Wire Marking (label)     Connection
+
+MAIN RELAY               30 = +12VOLT STRAIGHT FROM BATTERY
+
+                         86 = +12VOLT STRAIGHT FROM BATTERY
+
+FUEL PUMP RELAY          30 = +12VOLT STRAIGHT FROM BATTERY
+
+(if present)             87 = +12VOLT TO FUEL PUMP
+
+V. KEY                   POSITIVE 12VOLT FROM "KEY"
+
+SHIFT M (map shift switch) OPEN TO GND = MAP 1
+
+                         CLOSED TO GND = MAP 2
+
+N°2 DIAMETER 6MM         GND
+
+LAMBDA                   TO LAMBDA CONTROLLER
+
+RPM 28                   TO RPM GAUGE
+
+RPM 9                    DISCONNECTED
+
+CAN LINE                 NOT CONNECTED
+
+                         (or to Dash-Board if present)
+
+MAP                      TO MAP SENSOR
+
+COIL n°1-2-3-4           TO COILS CYLINDERS
+
+INJECTOR n°1-2-3-4       TO INJECTORS CYLINDERS
+
+SMOT                     TO RPM SENSOR
+
+T.P.S.                   TO THROTTLE POSITION SENSOR
+
+V.IDLE                   ENGINE IDLE CONTROL (if present)
+
+T. WATER                 TO WATER TEMPERATURE SENSOR
+
+T. AIR                   TO AIR TEMPERATURE SENSOR
+
+                         (MANIFOLD)
+
+                         Table 3 - Engine cabling connections
+
+FLYGAS - Bologna, Italy                +39 051 807202  info@flygas.info           Pag. 10
+                                      Designers and Engine Builders for U.A.V.
+                                                    www.flygas.info
+
+                         ENGINEERING
+
+                          FUEL LINES CONNECTION
+
+· The engine fuel supply is provided with a 3bar fuel pressure regulator, and a 3 bar
+    Mechanical Fuel Pump. The fuel system is designed to operate at a fuel pressure up
+    to 3.8 bar. The fuel pump has to be connected to the fuel distributor shown in
+    Figure 10.
+
+                         Figure 10 - GAS418S fuel lines connection
+
+FLYGAS - Bologna, Italy                +39 051 807202  info@flygas.info         Pag. 11
+                                      Designers and Engine Builders for U.A.V.
+                                                    www.flygas.info
+
+                         ENGINEERING
+
+                       ALTERNATOR REGULATOR DATA
+
+Type: Electronic full-wave rectifier regulator
+Output voltage: 14.2 V ± 0.3 (from 1000 ± 250 rpm)
+Maximum current limit: 22 A
+Maximum operating temperature: 80 °C (176 °F)
+
+The engine is supplied with a drive pulley for an additional alternator (not included).
+Pulley and belt data are displayed in Figure 11.
+
+                                                  Figure 11 - Additional alternator drive pulley
+
+*Flygas can supply a 28Volts supplementary alternator kit, with power from 100 to 300 Amp.
+
+FLYGAS - Bologna, Italy                +39 051 807202  info@flygas.info                           Pag. 12
+                                      Designers and Engine Builders for U.A.V.
+                                                    www.flygas.info
+
+                         ENGINEERING
+
+                                        OPTIONALS
+
+Here is a list and pictures of the available engine optional items:
+    · Aluminum intercooler (Figure 12).
+
+                                                    Figure 12 - GAS418S intercooler
+
+· Oil cooler (Figure 13) and thermostatic flow control valve (Figure 14).
+
+                         Figure 13 - GAS418S oil cooler
+
+FLYGAS - Bologna, Italy                +39 051 807202  info@flygas.info              Pag. 13
+                                      Designers and Engine Builders for U.A.V.
+                                                    www.flygas.info
+
+                         ENGINEERING
+
+                                       Figure 14 - Oil cooler thermostatic flow control valve
+
+· Stainless steel exhaust system (Figure 15) consisting of two equal length V-shaped
+    straight pipes connected to each head exhaust port. This exhaust tube is also fitted
+    with threaded bushings where the EGT sensors can be mounted.
+
+                         Figure 15 - ·Stainless steel exhaust system
+
+FLYGAS - Bologna, Italy                +39 051 807202  info@flygas.info         Pag. 14
+                                      Designers and Engine Builders for U.A.V.
+                                                    www.flygas.info
+
+                         ENGINEERING
+
+· 5 channels "DATALOGGER BOX" (each complete with N°1 Fuel pressure sensor and
+    N°4 type "K" EGT probes 0-1000°C). Refer to Figure 16 and Figure 17.
+
+                         Figure 16 - 5 channels datalogger box
+
+                         Figure 17 - EGT type 'K' probe
+
+FLYGAS - Bologna, Italy                +39 051 807202  info@flygas.info         Pag. 15
+                                      Designers and Engine Builders for U.A.V.
+                                                    www.flygas.info
+
+                         ENGINEERING
+
+· "Channel expansion" for DATALOGGER BOX to collect 4 additional external
+    channels (Figure 20).
+
+                                         Figure 18 - Channel Expansion for datalogger box
+
+· Lambda probe kit + amplifier + cable (Errore. L'origine riferimento non è stata
+    trovata.).
+
+FLYGAS - Bologna, Italy                +39 051 807202  info@flygas.info         Pag. 16
+                                      Designers and Engine Builders for U.A.V.
+                                                    www.flygas.info
+
+                         ENGINEERING
+
+                                                      Figure 19 - Lambda probe kit
+
+· Electronic throttle body. See example in Figure 20.
+
+FLYGAS - Bologna, Italy  Figure 20 - Electronic throttle body                       Pag. 17
+                                            +39 051 807202  info@flygas.info
+                                              Designers and Engine Builders for U.A.V.
+                                                            www.flygas.info
+
+                         ENGINEERING
+
+                         Figure 21 - GAS418S
+
+FLYGAS - Bologna, Italy                +39 051 807202  info@flygas.info                 Pag. 18
+                                      Designers and Engine Builders for U.A.V.
+                                                    www.flygas.info
+
+                         ENGINEERING
+
+Figure 22 - GAS418S In evidence you can see the mechanical fuel pump
+
+FLYGAS - Bologna, Italy                +39 051 807202  info@flygas.info         Pag. 19
+                                      Designers and Engine Builders for U.A.V.
+                                                    www.flygas.info
+
+                         ENGINEERING
+
+Figure 23 - In alternative to "Mechanical Fuel Pump", is it possible to install the "Hydraulic Propeller Governor"
+
+FLYGAS - Bologna, Italy                +39 051 807202  info@flygas.info         Pag. 20
+                                      Designers and Engine Builders for U.A.V.
+                                                    www.flygas.info
+
+                         ENGINEERING
+
+                         Figure 24 - GAS418S Vertical Axis on Dyno Room
+
+FLYGAS - Bologna, Italy                +39 051 807202  info@flygas.info         Pag. 21
+                                      Designers and Engine Builders for U.A.V.
+                                                    www.flygas.info
+
+                         ENGINEERING
+
+                                 GAS418HA
+Two-stage supercharged for higher altitude operations
+
+Figure 25 - *The two-stage "Gas418HA" engine is now under test and will soon be available on the market
+
+FLYGAS - Bologna, Italy                +39 051 807202  info@flygas.info                                  Pag. 22
+                                          Designers and Engine Builders for U.A.V.
+                                                        www.flygas.info
+
+                         ENGINEERING
+
+  FLYGAS shall not be held responsible for any consequences, loss or damages caused by
+                       malfunctioning or defects or faulty installation of the goods.
+
+The Italian Law is the applicable law and the competent exclusive court is the one in Bologna,
+                                                           Italy.
+
+                  Offered goods description and terms maybe subject to variations.
+
+                             ALL RIGHT RESERVED
+
+                         www.flygas.info
+
+FLYGAS - Bologna, Italy                +39 051 807202  info@flygas.info             Pag. 23
+
